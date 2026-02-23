@@ -1,0 +1,30 @@
+import { OnModuleInit } from '@nestjs/common';
+import { RolesService } from '../rbac/roles.service';
+import { UsersService } from '../users/users.service';
+import { ProjectsService } from '../projects/projects.service';
+import { PropertiesService } from '../properties/properties.service';
+import { PaymentsService } from '../payments/payments.service';
+import { SponsorsService } from '../sponsors/sponsors.service';
+import { UpdatesService } from '../updates/updates.service';
+import { SettingsService } from '../settings/settings.service';
+import { ServicesService } from '../services/services.service';
+import { EmployeesService } from '../employees/employees.service';
+export declare class SeedService implements OnModuleInit {
+    private rolesService;
+    private usersService;
+    private projectsService;
+    private propertiesService;
+    private paymentsService;
+    private sponsorsService;
+    private updatesService;
+    private settingsService;
+    private servicesService;
+    private employeesService;
+    constructor(rolesService: RolesService, usersService: UsersService, projectsService: ProjectsService, propertiesService: PropertiesService, paymentsService: PaymentsService, sponsorsService: SponsorsService, updatesService: UpdatesService, settingsService: SettingsService, servicesService: ServicesService, employeesService: EmployeesService);
+    onModuleInit(): Promise<void>;
+    seedRolesAndPermissions(): Promise<void>;
+    seedUsers(): Promise<void>;
+    seedSettings(): Promise<void>;
+    seedData(): Promise<void>;
+    seedEmployees(): Promise<void>;
+}
