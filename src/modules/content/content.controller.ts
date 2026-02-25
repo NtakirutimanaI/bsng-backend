@@ -19,7 +19,6 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { v4 as uuidv4 } from 'uuid';
-import { File } from 'multer';
 
 @UseGuards(JwtAuthGuard)
 @Controller('content')
@@ -37,9 +36,7 @@ export class ContentController {
   }
 
   @Get('public')
-  async findPublic(
-    @Query('section') section?: string,
-  ) {
+  async findPublic(@Query('section') section?: string) {
     return this.contentService.findPublic(section);
   }
 
@@ -90,7 +87,10 @@ export class ContentController {
   }
 
   @Patch(':id/toggle-status')
-  async toggleStatus(@Param('id') id: string, @Body('isActive') isActive: boolean) {
+  async toggleStatus(
+    @Param('id') id: string,
+    @Body('isActive') isActive: boolean,
+  ) {
     return this.contentService.toggleStatus(id, isActive);
   }
 
@@ -108,7 +108,7 @@ export class ContentController {
     }),
   )
   async uploadImage(
-    @UploadedFile() image: File,
+    @UploadedFile() image: Express.Multer.File,
     @Body('contentId') contentId: string,
   ) {
     const imageUrl = `/uploads/content/${image.filename}`;

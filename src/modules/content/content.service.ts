@@ -1,20 +1,29 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Content } from './entities/content.entity';
 import { CreateContentDto } from './dto/create-content.dto';
 import { UpdateContentDto } from './dto/update-content.dto';
 import { unlink } from 'fs/promises';
-import { File } from 'multer';
 
 @Injectable()
 export class ContentService {
   constructor(
     @InjectRepository(Content)
-    private contentRepository: Repository<Content>,
+    private readonly contentRepository: Repository<Content>,
   ) {}
 
-  async findAll(page = 1, limit = 10, search?: string, category?: string) {
+  // ✅ ADMIN LIST WITH PAGINATION + SEARCH
+  async findAll(
+    page = 1,
+    limit = 10,
+    search?: string,
+    category?: string,
+  ) {
     const queryBuilder = this.contentRepository
       .createQueryBuilder('content')
       .orderBy('content.order', 'ASC')
@@ -22,8 +31,10 @@ export class ContentService {
 
     if (search) {
       queryBuilder.andWhere(
-        '(content.title ILIKE :search OR content.description ILIKE :search OR content.section ILIKE :search)',
-        { search: `%${search}%` }
+        `(content.title ILIKE :search 
+          OR content.description ILIKE :search 
+          OR content.section ILIKE :search)`,
+        { search: `%${search}%` },
       );
     }
 
@@ -32,6 +43,7 @@ export class ContentService {
     }
 
     const skip = (page - 1) * limit;
+
     queryBuilder.skip(skip).take(limit);
 
     const [data, total] = await queryBuilder.getManyAndCount();
@@ -44,6 +56,7 @@ export class ContentService {
     };
   }
 
+  // ✅ PUBLIC CONTENT (ACTIVE ONLY)
   async findPublic(section?: string) {
     const queryBuilder = this.contentRepository
       .createQueryBuilder('content')
@@ -59,26 +72,49 @@ export class ContentService {
       .getMany();
   }
 
+  // ✅ FIND SINGLE
   async findOne(id: string) {
-    return this.contentRepository.findOne({ where: { id } });
-  }
-
-  async create(createContentDto: CreateContentDto, image?: File) {
-    const content = this.contentRepository.create({
-      ...createContentDto,
-      image: image ? `/uploads/content/${image.filename}` : undefined,
+    const content = await this.contentRepository.findOne({
+      where: { id },
     });
 
-    return this.contentRepository.save(content);
-  }
-
-  async update(id: string, updateContentDto: UpdateContentDto, image?: File) {
-    const content = await this.contentRepository.findOne({ where: { id } });
     if (!content) {
-      throw new Error('Content not found');
+      throw new NotFoundException('Content not found');
     }
 
-    // Delete old image if new one is uploaded
+    return content;
+  }
+
+  // ✅ CREATE
+  async create(
+    createContentDto: CreateContentDto,
+    image?: Express.Multer.File,
+  ) {
+    try {
+      const content = this.contentRepository.create({
+        ...createContentDto,
+        image: image
+          ? `/uploads/content/${image.filename}`
+          : undefined,
+      });
+
+      return await this.contentRepository.save(content);
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Failed to create content',
+      );
+    }
+  }
+
+  // ✅ UPDATE
+  async update(
+    id: string,
+    updateContentDto: UpdateContentDto,
+    image?: Express.Multer.File,
+  ) {
+    const content = await this.findOne(id);
+
+    // Delete old image if new one uploaded
     if (image && content.image) {
       try {
         await unlink(`.${content.image}`);
@@ -88,6 +124,7 @@ export class ContentService {
     }
 
     Object.assign(content, updateContentDto);
+
     if (image) {
       content.image = `/uploads/content/${image.filename}`;
     }
@@ -95,23 +132,19 @@ export class ContentService {
     return this.contentRepository.save(content);
   }
 
+  // ✅ TOGGLE STATUS
   async toggleStatus(id: string, isActive: boolean) {
-    const content = await this.contentRepository.findOne({ where: { id } });
-    if (!content) {
-      throw new Error('Content not found');
-    }
+    const content = await this.findOne(id);
 
     content.isActive = isActive;
+
     return this.contentRepository.save(content);
   }
 
+  // ✅ DELETE
   async remove(id: string) {
-    const content = await this.contentRepository.findOne({ where: { id } });
-    if (!content) {
-      throw new Error('Content not found');
-    }
+    const content = await this.findOne(id);
 
-    // Delete associated image
     if (content.image) {
       try {
         await unlink(`.${content.image}`);

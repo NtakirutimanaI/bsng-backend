@@ -29,7 +29,9 @@ let ContentService = class ContentService {
             .orderBy('content.order', 'ASC')
             .addOrderBy('content.createdAt', 'DESC');
         if (search) {
-            queryBuilder.andWhere('(content.title ILIKE :search OR content.description ILIKE :search OR content.section ILIKE :search)', { search: `%${search}%` });
+            queryBuilder.andWhere(`(content.title ILIKE :search 
+          OR content.description ILIKE :search 
+          OR content.section ILIKE :search)`, { search: `%${search}%` });
         }
         if (category && category !== 'all') {
             queryBuilder.andWhere('content.section = :category', { category });
@@ -57,20 +59,30 @@ let ContentService = class ContentService {
             .getMany();
     }
     async findOne(id) {
-        return this.contentRepository.findOne({ where: { id } });
+        const content = await this.contentRepository.findOne({
+            where: { id },
+        });
+        if (!content) {
+            throw new common_1.NotFoundException('Content not found');
+        }
+        return content;
     }
     async create(createContentDto, image) {
-        const content = this.contentRepository.create({
-            ...createContentDto,
-            image: image ? `/uploads/content/${image.filename}` : undefined,
-        });
-        return this.contentRepository.save(content);
+        try {
+            const content = this.contentRepository.create({
+                ...createContentDto,
+                image: image
+                    ? `/uploads/content/${image.filename}`
+                    : undefined,
+            });
+            return await this.contentRepository.save(content);
+        }
+        catch (error) {
+            throw new common_1.InternalServerErrorException('Failed to create content');
+        }
     }
     async update(id, updateContentDto, image) {
-        const content = await this.contentRepository.findOne({ where: { id } });
-        if (!content) {
-            throw new Error('Content not found');
-        }
+        const content = await this.findOne(id);
         if (image && content.image) {
             try {
                 await (0, promises_1.unlink)(`.${content.image}`);
@@ -86,18 +98,12 @@ let ContentService = class ContentService {
         return this.contentRepository.save(content);
     }
     async toggleStatus(id, isActive) {
-        const content = await this.contentRepository.findOne({ where: { id } });
-        if (!content) {
-            throw new Error('Content not found');
-        }
+        const content = await this.findOne(id);
         content.isActive = isActive;
         return this.contentRepository.save(content);
     }
     async remove(id) {
-        const content = await this.contentRepository.findOne({ where: { id } });
-        if (!content) {
-            throw new Error('Content not found');
-        }
+        const content = await this.findOne(id);
         if (content.image) {
             try {
                 await (0, promises_1.unlink)(`.${content.image}`);
