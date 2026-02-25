@@ -8,7 +8,7 @@ async function bootstrap() {
   const PORT = process.env.PORT ?? 3000;
 
   // Listen on all interfaces for Render
-  await app.listen(PORT, '0.0.0.0');
+  await app.listen(process.env.PORT ?? 3000);
 
   console.log(`Application is running on port ${PORT}`);
 }
