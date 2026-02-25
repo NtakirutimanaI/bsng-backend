@@ -21,6 +21,7 @@ import { BookingsModule } from './modules/bookings/bookings.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { StatisticsModule } from './modules/statistics/statistics.module';
 import { ServicesModule } from './modules/services/services.module';
+import { ContentModule } from './modules/content/content.module';
 
 @Module({
   imports: [
@@ -59,8 +60,9 @@ import { ServicesModule } from './modules/services/services.module';
     NotificationsModule,
     StatisticsModule,
     ServicesModule,
+    ContentModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

@@ -30,6 +30,7 @@ const bookings_module_1 = require("./modules/bookings/bookings.module");
 const notifications_module_1 = require("./notifications/notifications.module");
 const statistics_module_1 = require("./modules/statistics/statistics.module");
 const services_module_1 = require("./modules/services/services.module");
+const content_module_1 = require("./modules/content/content.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -71,6 +72,7 @@ exports.AppModule = AppModule = __decorate([
             notifications_module_1.NotificationsModule,
             statistics_module_1.StatisticsModule,
             services_module_1.ServicesModule,
+            content_module_1.ContentModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],
