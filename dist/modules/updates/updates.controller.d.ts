@@ -16,5 +16,9 @@ export declare class UpdatesController {
     }>;
     findOne(id: string): Promise<UpdateEntity | null>;
     update(id: string, updateUpdateDto: Partial<UpdateEntity>): Promise<UpdateEntity | null>;
+    uploadImage(id: string, image: Express.Multer.File): Promise<{
+        url: string;
+        id: string;
+    }>;
     remove(id: string): Promise<import("typeorm").DeleteResult>;
 }

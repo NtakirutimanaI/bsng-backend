@@ -14,6 +14,10 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PropertiesController = void 0;
 const common_1 = require("@nestjs/common");
+const platform_express_1 = require("@nestjs/platform-express");
+const multer_1 = require("multer");
+const path_1 = require("path");
+const uuid_1 = require("uuid");
 const properties_service_1 = require("./properties.service");
 let PropertiesController = class PropertiesController {
     propertiesService;
@@ -34,6 +38,13 @@ let PropertiesController = class PropertiesController {
     }
     update(id, updatePropertyDto) {
         return this.propertiesService.update(id, updatePropertyDto);
+    }
+    async uploadImage(id, image, field) {
+        const imageUrl = `/uploads/properties/${image.filename}`;
+        const validFields = ['image', 'image2', 'image3'];
+        const updateField = validFields.includes(field) ? field : 'image';
+        await this.propertiesService.update(id, { [updateField]: imageUrl });
+        return { url: imageUrl, id, field: updateField };
     }
     remove(id) {
         return this.propertiesService.remove(id);
@@ -81,6 +92,25 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], PropertiesController.prototype, "update", null);
+__decorate([
+    (0, common_1.Post)(':id/upload-image'),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('image', {
+        storage: (0, multer_1.diskStorage)({
+            destination: './uploads/properties',
+            filename: (req, file, cb) => {
+                const randomName = (0, uuid_1.v4)();
+                const fileExt = (0, path_1.extname)(file.originalname);
+                cb(null, `${randomName}${fileExt}`);
+            },
+        }),
+    })),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.UploadedFile)()),
+    __param(2, (0, common_1.Body)('field')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, String]),
+    __metadata("design:returntype", Promise)
+], PropertiesController.prototype, "uploadImage", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     __param(0, (0, common_1.Param)('id')),

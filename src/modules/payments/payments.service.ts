@@ -8,9 +8,16 @@ export class PaymentsService {
   constructor(
     @InjectRepository(Payment)
     private paymentsRepository: Repository<Payment>,
-  ) {}
+  ) { }
 
   create(data: Partial<Payment>) {
+    // Auto-generate code if not provided
+    if (!data.code) {
+      const now = new Date();
+      const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
+      const rand = Math.floor(1000 + Math.random() * 9000);
+      data.code = `PAY-${dateStr}-${rand}`;
+    }
     const payment = this.paymentsRepository.create(data);
     return this.paymentsRepository.save(payment);
   }

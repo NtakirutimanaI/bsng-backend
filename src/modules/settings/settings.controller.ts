@@ -1,5 +1,9 @@
-import { Controller, Get, Body, Put, Param } from '@nestjs/common';
+import { Controller, Get, Body, Put, Param, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { SettingsService } from './settings.service';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
+import { v4 as uuidv4 } from 'uuid';
 import { UpdateSettingDto } from './dtos/update-setting.dto';
 // Assuming AuthGuard logic; might need to adjust imports based on actual auth implementation
 // import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
@@ -32,6 +36,30 @@ export class SettingsController {
     @Body() updateSettingDto: UpdateSettingDto,
   ) {
     return this.settingsService.update(key, updateSettingDto);
+  }
+
+  @Post('upload-image')
+  @UseInterceptors(
+    FileInterceptor('image', {
+      storage: diskStorage({
+        destination: './uploads/settings',
+        filename: (req, file, cb) => {
+          const randomName = uuidv4();
+          const fileExt = extname(file.originalname);
+          cb(null, `${randomName}${fileExt}`);
+        },
+      }),
+    }),
+  )
+  async uploadImage(
+    @UploadedFile() image: Express.Multer.File,
+    @Body('key') key: string,
+  ) {
+    const imageUrl = `/uploads/settings/${image.filename}`;
+    if (key) {
+      await this.settingsService.updateValue(key, imageUrl);
+    }
+    return { url: imageUrl, key };
   }
 
   @Get('seed')

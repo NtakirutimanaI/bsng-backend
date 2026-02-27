@@ -28,6 +28,8 @@ let Property = class Property {
     bedrooms;
     bathrooms;
     image;
+    image2;
+    image3;
     createdAt;
     updatedAt;
 };
@@ -96,6 +98,14 @@ __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)
 ], Property.prototype, "image", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], Property.prototype, "image2", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], Property.prototype, "image3", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)({ name: 'created_at' }),
     __metadata("design:type", Date)

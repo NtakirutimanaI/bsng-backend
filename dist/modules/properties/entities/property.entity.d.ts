@@ -15,6 +15,8 @@ export declare class Property {
     bedrooms: number;
     bathrooms: number;
     image: string;
+    image2: string;
+    image3: string;
     createdAt: Date;
     updatedAt: Date;
 }

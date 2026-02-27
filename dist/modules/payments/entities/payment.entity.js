@@ -22,6 +22,7 @@ let Payment = class Payment {
     description;
     payer;
     payee;
+    propertyId;
     createdAt;
     updatedAt;
 };
@@ -66,6 +67,10 @@ __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)
 ], Payment.prototype, "payee", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'property_id', nullable: true }),
+    __metadata("design:type", String)
+], Payment.prototype, "propertyId", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)({ name: 'created_at' }),
     __metadata("design:type", Date)

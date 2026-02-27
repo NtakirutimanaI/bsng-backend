@@ -59,6 +59,16 @@ export class SettingsService {
     return this.settingsRepository.save(setting);
   }
 
+  async updateValue(key: string, value: string) {
+    let setting = await this.settingsRepository.findOne({ where: { key } });
+    if (!setting) {
+      setting = this.settingsRepository.create({ key, value, group: 'external', isPublic: true });
+    } else {
+      setting.value = value;
+    }
+    return this.settingsRepository.save(setting);
+  }
+
   async seed() {
     const settings = [
       // Home Page
@@ -103,6 +113,13 @@ export class SettingsService {
         value: 'true',
         group: 'home',
         description: 'Show/Hide services section',
+        isPublic: true,
+      },
+      {
+        key: 'home_hero_bg',
+        value: '/img/hero-bg.jpg',
+        group: 'home',
+        description: 'Hero background image',
         isPublic: true,
       },
 
@@ -150,6 +167,118 @@ export class SettingsService {
         description: 'Show/Hide team section',
         isPublic: true,
       },
+      {
+        key: 'home_about_image',
+        value: '/img/about-2.jpg',
+        group: 'home',
+        description: 'Image displayed on home about section',
+        isPublic: true,
+      },
+      {
+        key: 'home_carousel_1',
+        value: '/img/hero-slider-1.jpg',
+        group: 'home',
+        description: 'First hero carousel image',
+        isPublic: true,
+      },
+      {
+        key: 'home_carousel_2',
+        value: '/img/hero-slider-2.jpg',
+        group: 'home',
+        description: 'Second hero carousel image',
+        isPublic: true,
+      },
+      {
+        key: 'home_carousel_3',
+        value: '/img/hero-slider-3.jpg',
+        group: 'home',
+        description: 'Third hero carousel image',
+        isPublic: true,
+      },
+      {
+        key: 'home_project_card_1',
+        value: '/img/project-1.jpg',
+        group: 'home',
+        description: 'Project category image 1',
+        isPublic: true,
+      },
+      {
+        key: 'home_project_card_2',
+        value: '/img/project-2.jpg',
+        group: 'home',
+        description: 'Project category image 2',
+        isPublic: true,
+      },
+      {
+        key: 'home_project_card_3',
+        value: '/img/project-3.jpg',
+        group: 'home',
+        description: 'Project category image 3',
+        isPublic: true,
+      },
+      {
+        key: 'home_project_card_4',
+        value: '/img/project-4.jpg',
+        group: 'home',
+        description: 'Project category image 4',
+        isPublic: true,
+      },
+      {
+        key: 'home_project_card_5',
+        value: '/img/project-5.jpg',
+        group: 'home',
+        description: 'Project category image 5',
+        isPublic: true,
+      },
+      {
+        key: 'home_project_card_6',
+        value: '/img/project-6.jpg',
+        group: 'home',
+        description: 'Project category image 6',
+        isPublic: true,
+      },
+      {
+        key: 'about_image_1',
+        value: '/img/about-1.jpg',
+        group: 'about',
+        description: 'First image in About section',
+        isPublic: true,
+      },
+      {
+        key: 'about_image_2',
+        value: '/img/about-2.jpg',
+        group: 'about',
+        description: 'Secondary image on about page',
+        isPublic: true,
+      },
+      {
+        key: 'about_team_1',
+        value: '/img/team-1.jpg',
+        group: 'about',
+        description: 'Team member 1 image',
+        isPublic: true,
+      },
+      {
+        key: 'about_team_2',
+        value: '/img/team-2.jpg',
+        group: 'about',
+        description: 'Team member 2 image',
+        isPublic: true,
+      },
+      {
+        key: 'about_team_3',
+        value: '/img/team-3.jpg',
+        group: 'about',
+        description: 'Team member 3 image',
+        isPublic: true,
+      },
+      {
+        key: 'about_team_4',
+        value: '/img/team-4.jpg',
+        group: 'about',
+        description: 'Team member 4 image',
+        isPublic: true,
+      },
 
       // Service Page
       {
@@ -169,6 +298,34 @@ export class SettingsService {
         value: '+250 737 213 060',
         group: 'services',
         description: 'Phone number shown on services page',
+        isPublic: true,
+      },
+      {
+        key: 'service_image_1',
+        value: '/img/service-1.jpg',
+        group: 'services',
+        description: 'First image in Services section',
+        isPublic: true,
+      },
+      {
+        key: 'service_image_2',
+        value: '/img/service-2.jpg',
+        group: 'services',
+        description: 'Second service representative image',
+        isPublic: true,
+      },
+      {
+        key: 'service_image_3',
+        value: '/img/service-3.jpg',
+        group: 'services',
+        description: 'Third service representative image',
+        isPublic: true,
+      },
+      {
+        key: 'service_image_4',
+        value: '/img/service-4.jpg',
+        group: 'services',
+        description: 'Fourth service representative image',
         isPublic: true,
       },
 
@@ -279,6 +436,13 @@ export class SettingsService {
         }),
         group: 'global',
         description: 'Top bar/Footer physical address',
+        isPublic: true,
+      },
+      {
+        key: 'global_newsletter_bg',
+        value: '/img/newsletter.jpg',
+        group: 'global',
+        description: 'Newsletter background image',
         isPublic: true,
       },
 

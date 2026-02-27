@@ -6,6 +6,10 @@ export declare class SettingsController {
     getPublicSettings(): Promise<import("./entities/setting.entity").Setting[]>;
     getAllSettings(): Promise<import("./entities/setting.entity").Setting[]>;
     updateSetting(key: string, updateSettingDto: UpdateSettingDto): Promise<import("./entities/setting.entity").Setting>;
+    uploadImage(image: Express.Multer.File, key: string): Promise<{
+        url: string;
+        key: string;
+    }>;
     seed(): Promise<{
         message: string;
         count: number;
