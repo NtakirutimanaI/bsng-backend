@@ -38,6 +38,9 @@ export class Payment {
   @Column({ nullable: true })
   payee: string;
 
+  @Column({ name: 'property_id', nullable: true })
+  propertyId: string;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

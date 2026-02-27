@@ -56,6 +56,12 @@ export class Property {
   @Column({ nullable: true })
   image: string;
 
+  @Column({ nullable: true })
+  image2: string;
+
+  @Column({ nullable: true })
+  image3: string;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

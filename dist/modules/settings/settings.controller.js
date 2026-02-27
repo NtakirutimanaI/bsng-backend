@@ -14,7 +14,11 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SettingsController = void 0;
 const common_1 = require("@nestjs/common");
+const platform_express_1 = require("@nestjs/platform-express");
 const settings_service_1 = require("./settings.service");
+const multer_1 = require("multer");
+const path_1 = require("path");
+const uuid_1 = require("uuid");
 const update_setting_dto_1 = require("./dtos/update-setting.dto");
 let SettingsController = class SettingsController {
     settingsService;
@@ -29,6 +33,13 @@ let SettingsController = class SettingsController {
     }
     updateSetting(key, updateSettingDto) {
         return this.settingsService.update(key, updateSettingDto);
+    }
+    async uploadImage(image, key) {
+        const imageUrl = `/uploads/settings/${image.filename}`;
+        if (key) {
+            await this.settingsService.updateValue(key, imageUrl);
+        }
+        return { url: imageUrl, key };
     }
     seed() {
         return this.settingsService.seed();
@@ -55,6 +66,24 @@ __decorate([
     __metadata("design:paramtypes", [String, update_setting_dto_1.UpdateSettingDto]),
     __metadata("design:returntype", void 0)
 ], SettingsController.prototype, "updateSetting", null);
+__decorate([
+    (0, common_1.Post)('upload-image'),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('image', {
+        storage: (0, multer_1.diskStorage)({
+            destination: './uploads/settings',
+            filename: (req, file, cb) => {
+                const randomName = (0, uuid_1.v4)();
+                const fileExt = (0, path_1.extname)(file.originalname);
+                cb(null, `${randomName}${fileExt}`);
+            },
+        }),
+    })),
+    __param(0, (0, common_1.UploadedFile)()),
+    __param(1, (0, common_1.Body)('key')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", Promise)
+], SettingsController.prototype, "uploadImage", null);
 __decorate([
     (0, common_1.Get)('seed'),
     __metadata("design:type", Function),

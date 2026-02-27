@@ -16,5 +16,10 @@ export declare class PropertiesController {
     }>;
     findOne(id: string): Promise<Property | null>;
     update(id: string, updatePropertyDto: Partial<Property>): Promise<Property | null>;
+    uploadImage(id: string, image: Express.Multer.File, field: string): Promise<{
+        url: string;
+        id: string;
+        field: string;
+    }>;
     remove(id: string): Promise<import("typeorm").DeleteResult>;
 }

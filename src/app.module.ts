@@ -22,6 +22,10 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { StatisticsModule } from './modules/statistics/statistics.module';
 import { ServicesModule } from './modules/services/services.module';
 import { ContentModule } from './modules/content/content.module';
+import { SitesModule } from './modules/sites/sites.module';
+import { ContractsModule } from './modules/contracts/contracts.module';
+import { AssignmentsModule } from './modules/assignments/assignments.module';
+import { FinanceModule } from './modules/finance/finance.module';
 
 @Module({
   imports: [
@@ -61,6 +65,10 @@ import { ContentModule } from './modules/content/content.module';
     StatisticsModule,
     ServicesModule,
     ContentModule,
+    SitesModule,
+    ContractsModule,
+    AssignmentsModule,
+    FinanceModule,
   ],
   controllers: [AppController],
   providers: [AppService],
