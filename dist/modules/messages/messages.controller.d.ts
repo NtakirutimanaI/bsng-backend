@@ -15,4 +15,15 @@ export declare class MessagesController {
         content: string;
     }): Promise<import("./entities/message.entity").Message>;
     submitContact(body: any): Promise<import("./entities/contact-message.entity").ContactMessage>;
+    getContactMessages(page?: number, limit?: number, status?: string): Promise<{
+        data: import("./entities/contact-message.entity").ContactMessage[];
+        total: number;
+        page: number;
+        lastPage: number;
+        unreadCount: number;
+    }>;
+    updateContactStatus(id: string, status: string): Promise<import("./entities/contact-message.entity").ContactMessage | null>;
+    deleteContactMessage(id: string): Promise<{
+        success: boolean;
+    }>;
 }

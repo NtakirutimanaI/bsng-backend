@@ -14,7 +14,7 @@ export class MessagesService {
     private contactMessagesRepository: Repository<ContactMessage>,
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-  ) {}
+  ) { }
 
   async getConversations(userId: string) {
     // This is a bit complex in TypeORM without raw query, but we can do it
@@ -139,5 +139,37 @@ export class MessagesService {
     }
 
     return contactMessage;
+  }
+
+  async getContactMessages(page: number = 1, limit: number = 50, status?: string) {
+    const whereClause = status && status !== 'all' ? { status } : {};
+    const [data, total] = await this.contactMessagesRepository.findAndCount({
+      where: whereClause,
+      order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    const unreadCount = await this.contactMessagesRepository.count({
+      where: { status: 'new' },
+    });
+
+    return {
+      data,
+      total,
+      page,
+      lastPage: Math.ceil(total / limit),
+      unreadCount,
+    };
+  }
+
+  async updateContactStatus(id: string, status: string) {
+    await this.contactMessagesRepository.update(id, { status });
+    return this.contactMessagesRepository.findOne({ where: { id } });
+  }
+
+  async deleteContactMessage(id: string) {
+    await this.contactMessagesRepository.update(id, { status: 'deleted' });
+    return { success: true };
   }
 }

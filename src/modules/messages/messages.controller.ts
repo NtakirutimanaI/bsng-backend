@@ -1,9 +1,9 @@
-import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, Patch, Delete } from '@nestjs/common';
 import { MessagesService } from './messages.service';
 
 @Controller('messages')
 export class MessagesController {
-  constructor(private readonly messagesService: MessagesService) {}
+  constructor(private readonly messagesService: MessagesService) { }
 
   @Get('conversations')
   async getConversations(@Query('userId') userId: string) {
@@ -39,5 +39,27 @@ export class MessagesController {
   @Post('contact')
   async submitContact(@Body() body: any) {
     return this.messagesService.createContactMessage(body);
+  }
+
+  @Get('contact')
+  async getContactMessages(
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 50,
+    @Query('status') status?: string,
+  ) {
+    return this.messagesService.getContactMessages(Number(page), Number(limit), status);
+  }
+
+  @Patch('contact/:id/status')
+  async updateContactStatus(
+    @Param('id') id: string,
+    @Body('status') status: string,
+  ) {
+    return this.messagesService.updateContactStatus(id, status);
+  }
+
+  @Delete('contact/:id')
+  async deleteContactMessage(@Param('id') id: string) {
+    return this.messagesService.deleteContactMessage(id);
   }
 }
