@@ -118,6 +118,33 @@ let MessagesService = class MessagesService {
         }
         return contactMessage;
     }
+    async getContactMessages(page = 1, limit = 50, status) {
+        const whereClause = status && status !== 'all' ? { status } : {};
+        const [data, total] = await this.contactMessagesRepository.findAndCount({
+            where: whereClause,
+            order: { createdAt: 'DESC' },
+            skip: (page - 1) * limit,
+            take: limit,
+        });
+        const unreadCount = await this.contactMessagesRepository.count({
+            where: { status: 'new' },
+        });
+        return {
+            data,
+            total,
+            page,
+            lastPage: Math.ceil(total / limit),
+            unreadCount,
+        };
+    }
+    async updateContactStatus(id, status) {
+        await this.contactMessagesRepository.update(id, { status });
+        return this.contactMessagesRepository.findOne({ where: { id } });
+    }
+    async deleteContactMessage(id) {
+        await this.contactMessagesRepository.update(id, { status: 'deleted' });
+        return { success: true };
+    }
 };
 exports.MessagesService = MessagesService;
 exports.MessagesService = MessagesService = __decorate([

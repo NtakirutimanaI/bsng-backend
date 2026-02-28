@@ -32,6 +32,15 @@ let MessagesController = class MessagesController {
     async submitContact(body) {
         return this.messagesService.createContactMessage(body);
     }
+    async getContactMessages(page = 1, limit = 50, status) {
+        return this.messagesService.getContactMessages(Number(page), Number(limit), status);
+    }
+    async updateContactStatus(id, status) {
+        return this.messagesService.updateContactStatus(id, status);
+    }
+    async deleteContactMessage(id) {
+        return this.messagesService.deleteContactMessage(id);
+    }
 };
 exports.MessagesController = MessagesController;
 __decorate([
@@ -65,6 +74,30 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], MessagesController.prototype, "submitContact", null);
+__decorate([
+    (0, common_1.Get)('contact'),
+    __param(0, (0, common_1.Query)('page')),
+    __param(1, (0, common_1.Query)('limit')),
+    __param(2, (0, common_1.Query)('status')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, Number, String]),
+    __metadata("design:returntype", Promise)
+], MessagesController.prototype, "getContactMessages", null);
+__decorate([
+    (0, common_1.Patch)('contact/:id/status'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)('status')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", Promise)
+], MessagesController.prototype, "updateContactStatus", null);
+__decorate([
+    (0, common_1.Delete)('contact/:id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], MessagesController.prototype, "deleteContactMessage", null);
 exports.MessagesController = MessagesController = __decorate([
     (0, common_1.Controller)('messages'),
     __metadata("design:paramtypes", [messages_service_1.MessagesService])

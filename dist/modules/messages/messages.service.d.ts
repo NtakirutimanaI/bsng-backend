@@ -16,4 +16,15 @@ export declare class MessagesService {
     }>;
     sendMessage(senderId: string, receiverId: string, content: string): Promise<Message>;
     createContactMessage(data: Partial<ContactMessage>): Promise<ContactMessage>;
+    getContactMessages(page?: number, limit?: number, status?: string): Promise<{
+        data: ContactMessage[];
+        total: number;
+        page: number;
+        lastPage: number;
+        unreadCount: number;
+    }>;
+    updateContactStatus(id: string, status: string): Promise<ContactMessage | null>;
+    deleteContactMessage(id: string): Promise<{
+        success: boolean;
+    }>;
 }
