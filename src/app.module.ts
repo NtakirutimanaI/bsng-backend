@@ -26,6 +26,7 @@ import { SitesModule } from './modules/sites/sites.module';
 import { ContractsModule } from './modules/contracts/contracts.module';
 import { AssignmentsModule } from './modules/assignments/assignments.module';
 import { FinanceModule } from './modules/finance/finance.module';
+import { ActivitiesModule } from './modules/activities/activities.module';
 
 @Module({
   imports: [
@@ -69,8 +70,9 @@ import { FinanceModule } from './modules/finance/finance.module';
     ContractsModule,
     AssignmentsModule,
     FinanceModule,
+    ActivitiesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
