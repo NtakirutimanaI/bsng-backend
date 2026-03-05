@@ -5,6 +5,7 @@ import { Employee } from './entities/employee.entity';
 import { Attendance } from './entities/attendance.entity';
 import { SalaryPayment } from './entities/salary-payment.entity';
 import { PaymentsService } from '../payments/payments.service';
+import { ActivitiesService } from '../activities/activities.service';
 
 @Injectable()
 export class EmployeesService {
@@ -16,6 +17,7 @@ export class EmployeesService {
     @InjectRepository(SalaryPayment)
     private salaryPaymentRepository: Repository<SalaryPayment>,
     private paymentsService: PaymentsService,
+    private activitiesService: ActivitiesService,
   ) { }
 
   async getAttendanceHistory(userId: string) {
@@ -59,6 +61,21 @@ export class EmployeesService {
 
     // Update aggregate attendance percentage on employee
     await this.updateEmployeeAttendanceRate(employeeId);
+
+    // LOG ACTIVITY
+    try {
+      const emp = await this.employeesRepository.findOne({ where: { id: employeeId } });
+      await this.activitiesService.create({
+        userName: 'System', // Could be from request context in production
+        userEmail: 'system@bsng.com',
+        action: 'Attendance Recorded',
+        target: emp?.name || 'Employee',
+        description: `Marked as ${status} for ${date}`,
+        metadata: { employeeId, status, date }
+      });
+    } catch (err) {
+      console.error('Failed to log attendance activity', err);
+    }
 
     return saved;
   }
@@ -213,13 +230,27 @@ export class EmployeesService {
       code: `SAL-${employee.employeeId}-${data.salaryMonth}-${data.salaryYear}`,
       amount: data.amount,
       type: 'salary',
-      status: atResult.status === 'completed' ? 'paid' : atResult.status,
+      status: atResult.status === 'completed' ? 'completed' : atResult.status,
       method: data.paymentMethod,
       date: new Date().toISOString().split('T')[0],
       description: `${methodLabel} salary payment for ${employee.name} — ${this.getMonthName(data.salaryMonth)} ${data.salaryYear} (${data.daysAttended} days, ${data.totalHours}hrs). Ref: ${atResult.transactionId}`,
       payee: employee.name,
       payer: 'BSNG Construction',
     });
+
+    // LOG ACTIVITY
+    try {
+      await this.activitiesService.create({
+        userName: data.initiatedBy,
+        userEmail: 'system@bsng.com',
+        action: 'Salary Disbursed',
+        target: employee.name,
+        description: `Disbursed RWF ${data.amount} for ${this.getMonthName(data.salaryMonth)} ${data.salaryYear}`,
+        metadata: { employeeId: data.employeeId, amount: data.amount, month: data.salaryMonth }
+      });
+    } catch (err) {
+      console.error('Failed to log salary activity', err);
+    }
 
     return {
       ...savedSalaryPayment,

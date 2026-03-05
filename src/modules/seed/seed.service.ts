@@ -274,6 +274,16 @@ export class SeedService implements OnModuleInit {
         });
         console.log(`EMERGENCY: Reset password for ${devEmail} to 123456`);
       }
+
+      const siteEmail = 'sitemanager@bsng.com';
+      const siteUser = await this.usersService.findByEmail(siteEmail);
+      if (siteUser) {
+        await this.usersService.update(siteUser.id, {
+          passwordHash: hashedPassword,
+          isActive: true
+        });
+        console.log(`EMERGENCY: Reset password for ${siteEmail} to 123456`);
+      }
     } catch (e) {
       console.error('Failed to reset dev password:', e.message);
     }

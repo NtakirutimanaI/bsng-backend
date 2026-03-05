@@ -8,6 +8,7 @@ import { EmployeesService } from '../employees/employees.service';
 import { PropertiesService } from '../properties/properties.service';
 import { PaymentsService } from '../payments/payments.service';
 import { SponsorsService } from '../sponsors/sponsors.service';
+import { ActivitiesService } from '../activities/activities.service';
 
 @Injectable()
 export class DashboardService {
@@ -21,7 +22,8 @@ export class DashboardService {
     private propertiesService: PropertiesService,
     private paymentsService: PaymentsService,
     private sponsorsService: SponsorsService,
-  ) {}
+    private activitiesService: ActivitiesService,
+  ) { }
 
   async createDashboard(data: Partial<Dashboard>): Promise<Dashboard> {
     const dashboard = this.dashboardsRepository.create(data);
@@ -49,7 +51,7 @@ export class DashboardService {
 
     // Calculate Revenue (Total client_payment income)
     const totalRevenue = payments.data
-      .filter((p) => p.type === 'client_payment' && p.status === 'completed')
+      .filter((p) => p.type === 'client_payment' && ['completed', 'paid'].includes(p.status))
       .reduce((sum, p) => sum + Number(p.amount), 0);
 
     // Calculate Expenses (Total salary/contractor/supplier)
@@ -57,7 +59,7 @@ export class DashboardService {
       .filter(
         (p) =>
           ['salary', 'contractor', 'supplier', 'expense'].includes(p.type) &&
-          p.status === 'completed',
+          ['completed', 'paid'].includes(p.status),
       )
       .reduce((sum, p) => sum + Number(p.amount), 0);
 
@@ -236,5 +238,9 @@ export class DashboardService {
     }
 
     return stats;
+  }
+
+  async getRecentActivity() {
+    return this.activitiesService.findAll(15, 0);
   }
 }
