@@ -4,10 +4,10 @@
   "private": true,
   "scripts": {
     "build": "npx nest build",
-    "start": "node dist/main.js",
+    "start": "node dist/src/main.js",
     "start:dev": "npx nest start --watch",
     "start:debug": "npx nest start --debug --watch",
-    "start:prod": "node dist/main",
+    "start:prod": "node dist/src/main.js",
     "format": "npx prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "lint": "npx eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "npx jest",
