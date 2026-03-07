@@ -85,6 +85,9 @@ export class User {
   @Column({ name: 'reset_token_expires', type: 'timestamp', nullable: true })
   resetTokenExpires: Date;
 
+  @Column({ name: 'avatar', nullable: true })
+  avatar: string;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 }
