@@ -44,6 +44,9 @@ import { ActivitiesModule } from './modules/activities/activities.module';
         database: configService.get<string>('DB_NAME', 'bsng_db'),
         autoLoadEntities: true,
         synchronize: true, // Use carefully in production
+        ssl: configService.get<string>('DB_HOST')?.includes('render.com')
+          ? { rejectUnauthorized: false }
+          : false,
       }),
       inject: [ConfigService],
     }),
