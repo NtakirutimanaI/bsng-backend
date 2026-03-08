@@ -41,6 +41,9 @@ export class Payment {
   @Column({ name: 'property_id', nullable: true })
   propertyId: string;
 
+  @Column({ name: 'booking_id', nullable: true })
+  bookingId: string;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
