@@ -14,6 +14,7 @@ export enum UserRole {
   MANAGER = 'manager',
   SITE_MANAGER = 'site_manager',
   EDITOR = 'editor',
+  CONTENT_EDITOR = 'content_editor',
   EMPLOYEE = 'employee',
   CLIENT = 'client',
   CONTRACTOR = 'contractor',
