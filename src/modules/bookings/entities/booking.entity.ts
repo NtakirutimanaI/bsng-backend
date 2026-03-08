@@ -13,12 +13,15 @@ export class Booking {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'property_id' })
+  @Column({ name: 'property_id', nullable: true })
   propertyId: string;
 
-  @ManyToOne(() => Property)
+  @ManyToOne(() => Property, { nullable: true })
   @JoinColumn({ name: 'property_id' })
   property: Property;
+
+  @Column({ name: 'service_id', nullable: true })
+  serviceId: string;
 
   @Column()
   name: string;
@@ -37,6 +40,15 @@ export class Booking {
 
   @Column({ default: 'pending' })
   status: string; // pending, confirmed, cancelled
+
+  @Column({ name: 'booking_type', default: 'rent' })
+  bookingType: string; // rent, sale
+
+  @Column({ name: 'payment_status', default: 'pending' })
+  paymentStatus: string; // pending, completed, failed
+
+  @Column({ type: 'numeric', default: 0 })
+  amount: number;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

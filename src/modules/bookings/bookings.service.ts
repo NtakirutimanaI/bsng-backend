@@ -3,16 +3,30 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Booking } from './entities/booking.entity';
 
+import { NotificationsService } from '../../notifications/notifications.service';
+
 @Injectable()
 export class BookingsService {
   constructor(
     @InjectRepository(Booking)
     private bookingsRepository: Repository<Booking>,
-  ) {}
+    private notificationsService: NotificationsService,
+  ) { }
 
   async create(createBookingDto: Partial<Booking>): Promise<Booking> {
     const booking = this.bookingsRepository.create(createBookingDto);
-    return await this.bookingsRepository.save(booking);
+    const savedBooking = await this.bookingsRepository.save(booking);
+
+    // Notify info to Admin/Manager
+    await this.notificationsService.create({
+      userId: 'admin', // General admin notification
+      title: 'New Booking Request',
+      message: `A new booking has been made for property ${savedBooking.propertyId} by ${savedBooking.name}. Type: ${savedBooking.bookingType}`,
+      type: 'info',
+      priority: 'high',
+    });
+
+    return savedBooking;
   }
 
   async findAll(): Promise<Booking[]> {
@@ -37,8 +51,33 @@ export class BookingsService {
     id: string,
     updateBookingDto: Partial<Booking>,
   ): Promise<Booking> {
+    const existingBooking = await this.findOne(id);
     await this.bookingsRepository.update(id, updateBookingDto);
-    return this.findOne(id);
+    const updatedBooking = await this.findOne(id);
+
+    // Notify if status changed
+    if (updateBookingDto.status && updateBookingDto.status !== existingBooking.status) {
+      await this.notificationsService.create({
+        userId: 'admin',
+        title: 'Booking Status Updated',
+        message: `Booking for ${updatedBooking.name} has been marked as ${updatedBooking.status}.`,
+        type: updatedBooking.status === 'confirmed' ? 'success' : (updatedBooking.status === 'cancelled' ? 'danger' : 'info'),
+        priority: 'medium',
+      });
+    }
+
+    // Notify if payment status changed
+    if (updateBookingDto.paymentStatus && updateBookingDto.paymentStatus !== existingBooking.paymentStatus) {
+      await this.notificationsService.create({
+        userId: 'admin',
+        title: 'Booking Payment Updated',
+        message: `Payment for ${updatedBooking.name}'s booking is now ${updatedBooking.paymentStatus}.`,
+        type: updatedBooking.paymentStatus === 'completed' ? 'success' : 'warning',
+        priority: 'high',
+      });
+    }
+
+    return updatedBooking;
   }
 
   async remove(id: string): Promise<void> {
