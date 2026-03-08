@@ -11,6 +11,7 @@ import { UpdatesService } from '../updates/updates.service';
 import { SettingsService } from '../settings/settings.service';
 import { ServicesService } from '../services/services.service';
 import { EmployeesService } from '../employees/employees.service';
+import { EventsService } from '../events/events.service';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -26,6 +27,7 @@ export class SeedService implements OnModuleInit {
     private settingsService: SettingsService,
     private servicesService: ServicesService,
     private employeesService: EmployeesService,
+    private eventsService: EventsService,
   ) { }
 
   async onModuleInit() {
@@ -69,6 +71,12 @@ export class SeedService implements OnModuleInit {
       console.log('Employees seeded.');
     } catch (e) {
       console.error('Error seeding employees:', e.message);
+    }
+    try {
+      await this.eventsService.seed();
+      console.log('Events seeded.');
+    } catch (e) {
+      console.error('Error seeding events:', e.message);
     }
 
     console.log('Seeding process completed.');

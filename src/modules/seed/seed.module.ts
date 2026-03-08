@@ -10,6 +10,7 @@ import { UpdatesModule } from '../updates/updates.module';
 import { SettingsModule } from '../settings/settings.module';
 import { ServicesModule } from '../services/services.module';
 import { EmployeesModule } from '../employees/employees.module';
+import { EventsModule } from '../events/events.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { EmployeesModule } from '../employees/employees.module';
     SettingsModule,
     ServicesModule,
     EmployeesModule,
+    EventsModule,
   ],
   providers: [SeedService],
 })
