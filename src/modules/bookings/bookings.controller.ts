@@ -6,13 +6,14 @@ import {
   Param,
   Delete,
   Put,
+  Query,
 } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import { Booking } from './entities/booking.entity';
 
 @Controller('bookings')
 export class BookingsController {
-  constructor(private readonly bookingsService: BookingsService) {}
+  constructor(private readonly bookingsService: BookingsService) { }
 
   @Post()
   create(@Body() createBookingDto: Partial<Booking>) {
@@ -20,8 +21,8 @@ export class BookingsController {
   }
 
   @Get()
-  findAll() {
-    return this.bookingsService.findAll();
+  findAll(@Query('userId') userId?: string) {
+    return this.bookingsService.findAll(userId);
   }
 
   @Get(':id')
