@@ -95,6 +95,7 @@ export class SeedService implements OnModuleInit {
       'hr',
       'investor',
       'guest',
+      'content_editor',
     ];
     for (const roleName of roles) {
       const exists = await this.rolesService.findRoleByName(roleName);
@@ -150,6 +151,10 @@ export class SeedService implements OnModuleInit {
           const editorRole = await this.rolesService.findRoleByName('editor');
           if (editorRole) {
             await this.rolesService.addPermissionToRole('editor', perm);
+          }
+          const contentEditorRole = await this.rolesService.findRoleByName('content_editor');
+          if (contentEditorRole) {
+            await this.rolesService.addPermissionToRole('content_editor', perm);
           }
         }
       } catch (e) { }
@@ -213,6 +218,13 @@ export class SeedService implements OnModuleInit {
         role: 'contractor',
         uRole: UserRole.CONTRACTOR,
         name: 'External Contractor',
+      },
+      {
+        email: 'content@bsng.com',
+        username: 'contenteditor',
+        role: 'content_editor',
+        uRole: UserRole.CONTENT_EDITOR,
+        name: 'Site Content Editor',
       },
     ];
 
