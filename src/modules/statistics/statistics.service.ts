@@ -37,25 +37,40 @@ export class StatisticsService {
             .limit(10)
             .getRawMany();
 
-        // Most active members (if logged in)
-        const topMembers = await this.pageViewRepository
+        // Group by city
+        const cityStats = await this.pageViewRepository
             .createQueryBuilder('pv')
-            .leftJoin('pv.user', 'user')
-            .select('user.fullName', 'name')
-            .addSelect('user.email', 'email')
-            .addSelect('COUNT(*)', 'visits')
-            .where('pv.userId IS NOT NULL')
-            .groupBy('user.id')
-            .addGroupBy('user.fullName')
-            .addGroupBy('user.email')
-            .orderBy('visits', 'DESC')
+            .select('pv.city', 'city')
+            .addSelect('COUNT(*)', 'count')
+            .groupBy('pv.city')
+            .orderBy('count', 'DESC')
             .limit(10)
+            .getRawMany();
+
+        // Recent Visitors
+        const recentVisitors = await this.pageViewRepository
+            .createQueryBuilder('pv')
+            .select(['pv.id', 'pv.ip', 'pv.country', 'pv.city', 'pv.url', 'pv.createdAt'])
+            .orderBy('pv.createdAt', 'DESC')
+            .limit(50)
+            .getMany();
+
+        // Last 7 days trend
+        const dailyTrend = await this.pageViewRepository
+            .createQueryBuilder('pv')
+            .select("to_char(pv.created_at, 'YYYY-MM-DD')", 'date')
+            .addSelect('COUNT(*)', 'visits')
+            .where('pv.createdAt >= :weekAgo', { weekAgo })
+            .groupBy("to_char(pv.created_at, 'YYYY-MM-DD')")
+            .orderBy('date', 'ASC')
             .getRawMany();
 
         return {
             overview: { daily, weekly, monthly },
             countries: countryStats,
-            topMembers,
+            cities: cityStats,
+            recentVisitors,
+            dailyTrend,
         };
     }
 }

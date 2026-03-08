@@ -27,6 +27,7 @@ import { ContractsModule } from './modules/contracts/contracts.module';
 import { AssignmentsModule } from './modules/assignments/assignments.module';
 import { FinanceModule } from './modules/finance/finance.module';
 import { ActivitiesModule } from './modules/activities/activities.module';
+import { EventsModule } from './modules/events/events.module';
 
 @Module({
   imports: [
@@ -74,6 +75,7 @@ import { ActivitiesModule } from './modules/activities/activities.module';
     AssignmentsModule,
     FinanceModule,
     ActivitiesModule,
+    EventsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

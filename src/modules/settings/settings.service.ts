@@ -54,8 +54,12 @@ export class SettingsService {
   }
 
   async update(key: string, updateSettingDto: UpdateSettingDto) {
-    const setting = await this.findOne(key);
-    Object.assign(setting, updateSettingDto);
+    let setting = await this.settingsRepository.findOne({ where: { key } });
+    if (!setting) {
+      setting = this.settingsRepository.create({ key, ...updateSettingDto, group: 'general', isPublic: true });
+    } else {
+      Object.assign(setting, updateSettingDto);
+    }
     return this.settingsRepository.save(setting);
   }
 
