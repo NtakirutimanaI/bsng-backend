@@ -16,6 +16,9 @@ export class Booking {
   @Column({ name: 'property_id', nullable: true })
   propertyId: string;
 
+  @Column({ name: 'user_id', nullable: true })
+  userId: string;
+
   @ManyToOne(() => Property, { nullable: true })
   @JoinColumn({ name: 'property_id' })
   property: Property;
