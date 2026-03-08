@@ -28,10 +28,17 @@ export class AuthController {
 
   @Post('register')
   async register(@Body() body: any) {
-    const { email, fullName, password } = body;
+    const { email, fullName, phone, address, age, password } = body;
     const salt = await bcrypt.genSalt();
     const passwordHash = await bcrypt.hash(password, salt);
-    return this.authService.register({ email, fullName, passwordHash });
+    return this.authService.register({
+      email,
+      fullName,
+      phone,
+      address,
+      age: age ? parseInt(age.toString()) : undefined,
+      passwordHash,
+    });
   }
 
   @Get('google')

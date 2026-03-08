@@ -52,6 +52,9 @@ export class AuthService {
   async register(registrationData: {
     email: string;
     fullName: string;
+    phone?: string;
+    address?: string;
+    age?: number;
     passwordHash: string;
   }): Promise<any> {
     const existingUser = await this.usersService.findByEmail(registrationData.email);
@@ -64,6 +67,9 @@ export class AuthService {
     const newUser = await this.usersService.create({
       email: registrationData.email,
       fullName: registrationData.fullName,
+      phone: registrationData.phone,
+      address: registrationData.address,
+      age: registrationData.age,
       username:
         registrationData.email.split('@')[0] +
         '_' +
@@ -74,9 +80,14 @@ export class AuthService {
       isActive: true,
     });
 
-    // Re-fetch to get relations (role)
-    const fullyLoadedUser = await this.usersService.findOne(newUser.id);
-    return this.login(fullyLoadedUser || newUser);
+    return {
+      message: 'Registration successful. Please log in with your credentials.',
+      user: {
+        id: newUser.id,
+        email: newUser.email,
+        fullName: newUser.fullName,
+      },
+    };
   }
 
   async validateGoogleUser(details: {

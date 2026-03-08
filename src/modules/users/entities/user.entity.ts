@@ -54,6 +54,12 @@ export class User {
   @Column({ name: 'full_name', length: 255 })
   fullName: string;
 
+  @Column({ length: 255, nullable: true })
+  address: string;
+
+  @Column({ type: 'int', nullable: true })
+  age: number;
+
   @Column({ name: 'role_id', nullable: true })
   roleId: string;
 
