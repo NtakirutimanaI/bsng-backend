@@ -11,15 +11,19 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
-import { v4 as uuidv4 } from 'uuid';
+import { memoryStorage } from 'multer';
 import { UpdatesService } from './updates.service';
 import { UpdateEntity } from './entities/update.entity';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { ConfigService } from '@nestjs/config';
 
 @Controller('updates')
 export class UpdatesController {
-  constructor(private readonly updatesService: UpdatesService) { }
+  constructor(
+    private readonly updatesService: UpdatesService,
+    private readonly cloudinaryService: CloudinaryService,
+    private readonly configService: ConfigService,
+  ) { }
 
   @Post()
   create(@Body() createUpdateDto: Partial<UpdateEntity>) {
@@ -62,21 +66,21 @@ export class UpdatesController {
   @Post(':id/upload-image')
   @UseInterceptors(
     FileInterceptor('image', {
-      storage: diskStorage({
-        destination: './uploads/updates',
-        filename: (req, file, cb) => {
-          const randomName = uuidv4();
-          const fileExt = extname(file.originalname);
-          cb(null, `${randomName}${fileExt}`);
-        },
-      }),
+      storage: memoryStorage(),
     }),
   )
   async uploadImage(
     @Param('id') id: string,
     @UploadedFile() image: Express.Multer.File,
   ) {
-    const imageUrl = `/uploads/updates/${image.filename}`;
+    let imageUrl = '';
+    if (this.configService.get('CLOUDINARY_CLOUD_NAME')) {
+      const result = await this.cloudinaryService.uploadImage(image, 'updates');
+      imageUrl = result.secure_url || result.url;
+    } else {
+      throw new Error('Cloudinary is not configured');
+    }
+
     await this.updatesService.update(id, { image: imageUrl });
     return { url: imageUrl, id };
   }

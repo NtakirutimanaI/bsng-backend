@@ -277,9 +277,7 @@ export class PropertiesService {
       const existing = await this.propertiesRepository.findOne({
         where: { code: data.code },
       });
-      if (existing) {
-        await this.propertiesRepository.update(existing.id, data);
-      } else {
+      if (!existing) {
         await this.propertiesRepository.save(
           this.propertiesRepository.create(data),
         );

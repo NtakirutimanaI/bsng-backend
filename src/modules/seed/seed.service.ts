@@ -285,7 +285,7 @@ export class SeedService implements OnModuleInit {
 
     // EMERGENCY RESET FOR DEVELOPER ACCOUNT
     try {
-      const devEmail = 'innocentntakir@gmail.com';
+      const devEmail = 'info.buildstronggenerations@gmail.com';
       const devUser = await this.usersService.findByEmail(devEmail);
       if (devUser) {
         await this.usersService.update(devUser.id, {
@@ -437,12 +437,15 @@ export class SeedService implements OnModuleInit {
     ];
 
     for (const s of footerSettings) {
-      await this.settingsService.createOrUpdate(
-        s.key,
-        s.value,
-        s.group,
-        s.description,
-      );
+      const existing = await this.settingsService.findOne(s.key).catch(() => null);
+      if (!existing) {
+        await this.settingsService.createOrUpdate(
+          s.key,
+          s.value,
+          s.group,
+          s.description,
+        );
+      }
     }
     console.log('Seeded settings');
   }

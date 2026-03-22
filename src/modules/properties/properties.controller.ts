@@ -11,15 +11,19 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
-import { v4 as uuidv4 } from 'uuid';
+import { memoryStorage } from 'multer';
 import { PropertiesService } from './properties.service';
 import { Property } from './entities/property.entity';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { ConfigService } from '@nestjs/config';
 
 @Controller('properties')
 export class PropertiesController {
-  constructor(private readonly propertiesService: PropertiesService) { }
+  constructor(
+    private readonly propertiesService: PropertiesService,
+    private readonly cloudinaryService: CloudinaryService,
+    private readonly configService: ConfigService,
+  ) { }
 
   @Post()
   create(@Body() createPropertyDto: Partial<Property>) {
@@ -68,14 +72,7 @@ export class PropertiesController {
   @Post(':id/upload-image')
   @UseInterceptors(
     FileInterceptor('image', {
-      storage: diskStorage({
-        destination: './uploads/properties',
-        filename: (req, file, cb) => {
-          const randomName = uuidv4();
-          const fileExt = extname(file.originalname);
-          cb(null, `${randomName}${fileExt}`);
-        },
-      }),
+      storage: memoryStorage(),
     }),
   )
   async uploadImage(
@@ -83,7 +80,14 @@ export class PropertiesController {
     @UploadedFile() image: Express.Multer.File,
     @Body('field') field: string,
   ) {
-    const imageUrl = `/uploads/properties/${image.filename}`;
+    let imageUrl = '';
+    if (this.configService.get('CLOUDINARY_CLOUD_NAME')) {
+      const result = await this.cloudinaryService.uploadImage(image, 'properties');
+      imageUrl = result.secure_url || result.url;
+    } else {
+      throw new Error('Cloudinary is not configured');
+    }
+
     const validFields = ['image', 'image2', 'image3'];
     const updateField = validFields.includes(field) ? field : 'image';
     await this.propertiesService.update(id, { [updateField]: imageUrl });

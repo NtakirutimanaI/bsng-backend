@@ -8,14 +8,15 @@ import { Repository } from 'typeorm';
 import { Content } from './entities/content.entity';
 import { CreateContentDto } from './dto/create-content.dto';
 import { UpdateContentDto } from './dto/update-content.dto';
-import { unlink } from 'fs/promises';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @Injectable()
 export class ContentService {
   constructor(
     @InjectRepository(Content)
     private readonly contentRepository: Repository<Content>,
-  ) {}
+    private readonly cloudinaryService: CloudinaryService,
+  ) { }
 
   // ✅ ADMIN LIST WITH PAGINATION + SEARCH
   async findAll(
@@ -91,11 +92,15 @@ export class ContentService {
     image?: Express.Multer.File,
   ) {
     try {
+      let imageUrl = undefined;
+      if (image) {
+        const result = await this.cloudinaryService.uploadImage(image, 'content');
+        imageUrl = result.secure_url || result.url;
+      }
+
       const content = this.contentRepository.create({
         ...createContentDto,
-        image: image
-          ? `/uploads/content/${image.filename}`
-          : undefined,
+        image: imageUrl,
       });
 
       return await this.contentRepository.save(content);
@@ -114,19 +119,14 @@ export class ContentService {
   ) {
     const content = await this.findOne(id);
 
-    // Delete old image if new one uploaded
-    if (image && content.image) {
-      try {
-        await unlink(`.${content.image}`);
-      } catch (error) {
-        console.error('Failed to delete old image:', error);
-      }
-    }
+    // Note: In Cloudinary we usually don't need to manually unlink local files
+    // as we are now using memoryStorage.
 
     Object.assign(content, updateContentDto);
 
     if (image) {
-      content.image = `/uploads/content/${image.filename}`;
+      const result = await this.cloudinaryService.uploadImage(image, 'content');
+      content.image = result.secure_url || result.url;
     }
 
     return this.contentRepository.save(content);
@@ -145,13 +145,7 @@ export class ContentService {
   async remove(id: string) {
     const content = await this.findOne(id);
 
-    if (content.image) {
-      try {
-        await unlink(`.${content.image}`);
-      } catch (error) {
-        console.error('Failed to delete image:', error);
-      }
-    }
+    // Optional: add logic to delete from Cloudinary if needed
 
     return this.contentRepository.remove(content);
   }

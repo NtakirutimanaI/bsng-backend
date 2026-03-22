@@ -1,10 +1,10 @@
 import { Controller, Get, Body, Put, Param, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { SettingsService } from './settings.service';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
-import { v4 as uuidv4 } from 'uuid';
+import { memoryStorage } from 'multer';
 import { UpdateSettingDto } from './dtos/update-setting.dto';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { ConfigService } from '@nestjs/config';
 // Assuming AuthGuard logic; might need to adjust imports based on actual auth implementation
 // import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 // import { RolesGuard } from '../../rbac/guards/roles.guard';
@@ -12,7 +12,11 @@ import { UpdateSettingDto } from './dtos/update-setting.dto';
 
 @Controller('settings')
 export class SettingsController {
-  constructor(private readonly settingsService: SettingsService) { }
+  constructor(
+    private readonly settingsService: SettingsService,
+    private readonly cloudinaryService: CloudinaryService,
+    private readonly configService: ConfigService,
+  ) { }
 
   @Get('public')
   getPublicSettings() {
@@ -41,21 +45,25 @@ export class SettingsController {
   @Post('upload-image')
   @UseInterceptors(
     FileInterceptor('image', {
-      storage: diskStorage({
-        destination: './uploads/settings',
-        filename: (req, file, cb) => {
-          const randomName = uuidv4();
-          const fileExt = extname(file.originalname);
-          cb(null, `${randomName}${fileExt}`);
-        },
-      }),
+      storage: memoryStorage(),
     }),
   )
   async uploadImage(
     @UploadedFile() image: Express.Multer.File,
     @Body('key') key: string,
   ) {
-    const imageUrl = `/uploads/settings/${image.filename}`;
+    let imageUrl = '';
+
+    // Check if Cloudinary is configured
+    if (this.configService.get('CLOUDINARY_CLOUD_NAME')) {
+      const result = await this.cloudinaryService.uploadImage(image, 'settings');
+      imageUrl = result.secure_url || result.url;
+    } else {
+      // Fallback or warning - currently we've moved to memoryStorage so local save would need extra code
+      // For now, if no Cloudinary, we might still want to support local for dev, but memoryStorage doesn't save to disk.
+      throw new Error('Cloudinary is not configured. Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET in .env');
+    }
+
     if (key) {
       await this.settingsService.updateValue(key, imageUrl);
     }

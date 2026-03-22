@@ -16,14 +16,18 @@ import { ContentService } from './content.service';
 import { CreateContentDto } from './dto/create-content.dto';
 import { UpdateContentDto } from './dto/update-content.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
-import { v4 as uuidv4 } from 'uuid';
+import { memoryStorage } from 'multer';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { ConfigService } from '@nestjs/config';
 
 @UseGuards(JwtAuthGuard)
 @Controller('content')
 export class ContentController {
-  constructor(private readonly contentService: ContentService) {}
+  constructor(
+    private readonly contentService: ContentService,
+    private readonly cloudinaryService: CloudinaryService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Get()
   async findAll(
@@ -48,14 +52,7 @@ export class ContentController {
   @Post()
   @UseInterceptors(
     FileInterceptor('image', {
-      storage: diskStorage({
-        destination: './uploads/content',
-        filename: (req, file, cb) => {
-          const randomName = uuidv4();
-          const fileExt = extname(file.originalname);
-          cb(null, `${randomName}${fileExt}`);
-        },
-      }),
+      storage: memoryStorage(),
     }),
   )
   async create(
@@ -68,14 +65,7 @@ export class ContentController {
   @Patch(':id')
   @UseInterceptors(
     FileInterceptor('image', {
-      storage: diskStorage({
-        destination: './uploads/content',
-        filename: (req, file, cb) => {
-          const randomName = uuidv4();
-          const fileExt = extname(file.originalname);
-          cb(null, `${randomName}${fileExt}`);
-        },
-      }),
+      storage: memoryStorage(),
     }),
   )
   async update(
@@ -97,21 +87,21 @@ export class ContentController {
   @Post('upload-image')
   @UseInterceptors(
     FileInterceptor('image', {
-      storage: diskStorage({
-        destination: './uploads/content',
-        filename: (req, file, cb) => {
-          const randomName = uuidv4();
-          const fileExt = extname(file.originalname);
-          cb(null, `${randomName}${fileExt}`);
-        },
-      }),
+      storage: memoryStorage(),
     }),
   )
   async uploadImage(
     @UploadedFile() image: Express.Multer.File,
     @Body('contentId') contentId: string,
   ) {
-    const imageUrl = `/uploads/content/${image.filename}`;
+    let imageUrl = '';
+    if (this.configService.get('CLOUDINARY_CLOUD_NAME')) {
+      const result = await this.cloudinaryService.uploadImage(image, 'content');
+      imageUrl = result.secure_url || result.url;
+    } else {
+      throw new Error('Cloudinary is not configured');
+    }
+
     return { url: imageUrl, contentId };
   }
 
