@@ -17,8 +17,8 @@ export class SalaryPayment {
     @Column()
     employeeId: string;
 
-    @ManyToOne(() => Employee)
-    @JoinColumn({ name: 'employee_id' })
+    @ManyToOne(() => Employee, { eager: false })
+    @JoinColumn({ name: 'employeeId' })
     employee: Employee;
 
     @Column('decimal', { precision: 14, scale: 2 })
