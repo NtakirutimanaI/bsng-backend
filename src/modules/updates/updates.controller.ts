@@ -16,6 +16,9 @@ import { UpdatesService } from './updates.service';
 import { UpdateEntity } from './entities/update.entity';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { ConfigService } from '@nestjs/config';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as crypto from 'crypto';
 
 @Controller('updates')
 export class UpdatesController {
@@ -74,11 +77,23 @@ export class UpdatesController {
     @UploadedFile() image: Express.Multer.File,
   ) {
     let imageUrl = '';
-    if (this.configService.get('CLOUDINARY_CLOUD_NAME')) {
+    const isCloudinaryConfigured = this.configService.get('CLOUDINARY_CLOUD_NAME') && this.configService.get('CLOUDINARY_CLOUD_NAME') !== 'your_cloud_name';
+
+    if (isCloudinaryConfigured) {
       const result = await this.cloudinaryService.uploadImage(image, 'updates');
       imageUrl = result.secure_url || result.url;
     } else {
-      throw new Error('Cloudinary is not configured');
+      const ext = path.extname(image.originalname);
+      const filename = `${crypto.randomBytes(16).toString('hex')}${ext}`;
+      const uploadDir = path.join(__dirname, '../../../../../bsng-frontend/public/img/custom/updates');
+      
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      
+      const filePath = path.join(uploadDir, filename);
+      fs.writeFileSync(filePath, image.buffer);
+      imageUrl = `/img/custom/updates/${filename}`;
     }
 
     await this.updatesService.update(id, { image: imageUrl });

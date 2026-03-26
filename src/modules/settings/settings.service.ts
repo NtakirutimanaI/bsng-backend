@@ -283,6 +283,29 @@ export class SettingsService {
         description: 'Team member 4 image',
         isPublic: true,
       },
+      ...[1, 2, 3, 4].flatMap(i => [
+        {
+          key: `about_team_${i}_name`,
+          value: i === 1 ? 'N. Jean Pierre' : i === 2 ? 'M. Claudine' : i === 3 ? 'K. Eric' : 'S. Alice',
+          group: 'about',
+          description: `Team member ${i} name`,
+          isPublic: true,
+        },
+        {
+          key: `about_team_${i}_role`,
+          value: i === 1 ? 'Managing Director' : i === 2 ? 'Senior Architect' : i === 3 ? 'Project Manager' : 'Site Engineer',
+          group: 'about',
+          description: `Team member ${i} role`,
+          isPublic: true,
+        }
+      ]),
+      ...[1, 2, 3, 4, 5, 6].map(i => ({
+        key: `home_project_card_${i}_count`,
+        value: i === 1 ? '72 Projects' : i === 2 ? '67 Projects' : i === 3 ? '45 Projects' : i === 4 ? '120 Properties' : i === 5 ? '85 Properties' : '200+ Clients',
+        group: 'home',
+        description: `Project category count ${i}`,
+        isPublic: true,
+      })),
 
       // Service Page
       {
@@ -348,7 +371,7 @@ export class SettingsService {
       },
       {
         key: 'contact_email',
-        value: 'info@bsng.rw',
+        value: 'info.buildstronggenerations@gmail.com',
         group: 'contact',
         description: 'Company contact email',
         isPublic: true,
@@ -425,7 +448,7 @@ export class SettingsService {
       },
       {
         key: 'contact_email_1',
-        value: 'info@bsng.rw',
+        value: 'info.buildstronggenerations@gmail.com',
         group: 'global',
         description: 'Top bar/Footer primary email',
         isPublic: true,

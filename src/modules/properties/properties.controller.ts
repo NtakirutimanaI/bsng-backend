@@ -16,6 +16,9 @@ import { PropertiesService } from './properties.service';
 import { Property } from './entities/property.entity';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { ConfigService } from '@nestjs/config';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as crypto from 'crypto';
 
 @Controller('properties')
 export class PropertiesController {
@@ -81,11 +84,23 @@ export class PropertiesController {
     @Body('field') field: string,
   ) {
     let imageUrl = '';
-    if (this.configService.get('CLOUDINARY_CLOUD_NAME')) {
+    const isCloudinaryConfigured = this.configService.get('CLOUDINARY_CLOUD_NAME') && this.configService.get('CLOUDINARY_CLOUD_NAME') !== 'your_cloud_name';
+
+    if (isCloudinaryConfigured) {
       const result = await this.cloudinaryService.uploadImage(image, 'properties');
       imageUrl = result.secure_url || result.url;
     } else {
-      throw new Error('Cloudinary is not configured');
+      const ext = path.extname(image.originalname);
+      const filename = `${crypto.randomBytes(16).toString('hex')}${ext}`;
+      const uploadDir = path.join(__dirname, '../../../../../bsng-frontend/public/img/custom/properties');
+      
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      
+      const filePath = path.join(uploadDir, filename);
+      fs.writeFileSync(filePath, image.buffer);
+      imageUrl = `/img/custom/properties/${filename}`;
     }
 
     const validFields = ['image', 'image2', 'image3'];

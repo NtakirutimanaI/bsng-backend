@@ -5,10 +5,13 @@ import { memoryStorage } from 'multer';
 import { UpdateSettingDto } from './dtos/update-setting.dto';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { ConfigService } from '@nestjs/config';
-// Assuming AuthGuard logic; might need to adjust imports based on actual auth implementation
-// import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-// import { RolesGuard } from '../../rbac/guards/roles.guard';
-// import { Roles } from '../../rbac/decorators/roles.decorator';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as crypto from 'crypto';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+
+const execAsync = promisify(exec);
 
 @Controller('settings')
 export class SettingsController {
@@ -23,17 +26,11 @@ export class SettingsController {
     return this.settingsService.findAllPublic();
   }
 
-  // Protected endpoints would go here. For now I'll leave them open or minimal as I can't see auth module structure fully.
-  // Ideally:
-  // @UseGuards(JwtAuthGuard, RolesGuard)
-  // @Roles('admin', 'editor')
   @Get()
   getAllSettings() {
     return this.settingsService.findAll();
   }
 
-  // @UseGuards(JwtAuthGuard, RolesGuard)
-  // @Roles('admin', 'editor')
   @Put(':key')
   updateSetting(
     @Param('key') key: string,
@@ -53,21 +50,55 @@ export class SettingsController {
     @Body('key') key: string,
   ) {
     let imageUrl = '';
+    const isCloudinaryConfigured = this.configService.get('CLOUDINARY_CLOUD_NAME') && this.configService.get('CLOUDINARY_CLOUD_NAME') !== 'your_cloud_name';
 
-    // Check if Cloudinary is configured
-    if (this.configService.get('CLOUDINARY_CLOUD_NAME')) {
+    if (isCloudinaryConfigured) {
       const result = await this.cloudinaryService.uploadImage(image, 'settings');
       imageUrl = result.secure_url || result.url;
     } else {
-      // Fallback or warning - currently we've moved to memoryStorage so local save would need extra code
-      // For now, if no Cloudinary, we might still want to support local for dev, but memoryStorage doesn't save to disk.
-      throw new Error('Cloudinary is not configured. Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET in .env');
+      // Create local fallback, saving to frontend's public directory
+      const ext = path.extname(image.originalname);
+      const filename = `${crypto.randomBytes(16).toString('hex')}${ext}`;
+      const uploadDir = path.join(__dirname, '../../../../../bsng-frontend/public/img/custom');
+      
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      
+      const filePath = path.join(uploadDir, filename);
+      fs.writeFileSync(filePath, image.buffer);
+      imageUrl = `/img/custom/${filename}`;
     }
 
     if (key) {
       await this.settingsService.updateValue(key, imageUrl);
     }
     return { url: imageUrl, key };
+  }
+  
+  @Post('sync-github')
+  async syncGithub() {
+    try {
+      const frontendDir = path.join(__dirname, '../../../../../bsng-frontend');
+      const backendDir = path.join(__dirname, '../../../../../bsng-backend');
+
+      for (const repoDir of [frontendDir, backendDir]) {
+        if (!fs.existsSync(repoDir)) continue;
+        await execAsync('git config --global user.email "admin@bsng.org" || true', { cwd: repoDir });
+        await execAsync('git config --global user.name "BSNG Admin" || true', { cwd: repoDir });
+        await execAsync('git add .', { cwd: repoDir });
+        try {
+          await execAsync('git commit -m "Auto-update website content via CMS"', { cwd: repoDir });
+          await execAsync('git push origin main', { cwd: repoDir });
+        } catch (commitErr) {
+           // Nothing to commit
+        }
+      }
+      return { success: true, message: 'Synced both frontend and backend to Github' };
+    } catch (error) {
+      console.error('Github Sync Error:', error);
+      return { success: false, error: 'Failed to sync with Github' };
+    }
   }
 
   @Get('seed')
