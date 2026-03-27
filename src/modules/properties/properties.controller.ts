@@ -92,7 +92,7 @@ export class PropertiesController {
     } else {
       const ext = path.extname(image.originalname);
       const filename = `${crypto.randomBytes(16).toString('hex')}${ext}`;
-      const uploadDir = path.join(process.cwd(), '../bsng-frontend/public/img/custom/properties');
+      const uploadDir = path.join(process.cwd(), 'uploads', 'img', 'custom', 'properties');
       
       if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true });

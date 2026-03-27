@@ -59,7 +59,7 @@ export class SettingsController {
       // Create local fallback, saving to frontend's public directory
       const ext = path.extname(image.originalname);
       const filename = `${crypto.randomBytes(16).toString('hex')}${ext}`;
-      const uploadDir = path.join(process.cwd(), '../bsng-frontend/public/img/custom');
+      const uploadDir = path.join(process.cwd(), 'uploads', 'img', 'custom');
       
       if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true });
@@ -104,5 +104,13 @@ export class SettingsController {
   @Get('seed')
   seed() {
     return this.settingsService.seed();
+  }
+
+  @Post('reset-carousel')
+  async resetCarousel() {
+    await this.settingsService.updateValue('home_carousel_1', '/img/hero-slider-1.jpg');
+    await this.settingsService.updateValue('home_carousel_2', '/img/hero-slider-2.jpg');
+    await this.settingsService.updateValue('home_carousel_3', '/img/hero-slider-3.jpg');
+    return { success: true, message: 'Hero carousel images reset to defaults.' };
   }
 }

@@ -11,6 +11,11 @@ async function bootstrap() {
     prefix: '/uploads',
   });
 
+  // Serve uploaded images at /img/custom/ so they match getImageUrl() routing
+  app.useStaticAssets(join(process.cwd(), 'uploads', 'img', 'custom'), {
+    prefix: '/img/custom',
+  });
+
   const PORT = process.env.PORT ?? 3000;
 
   // Listen on all interfaces for Render
