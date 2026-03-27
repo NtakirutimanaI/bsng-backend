@@ -59,7 +59,7 @@ export class SettingsController {
       // Create local fallback, saving to frontend's public directory
       const ext = path.extname(image.originalname);
       const filename = `${crypto.randomBytes(16).toString('hex')}${ext}`;
-      const uploadDir = path.join(__dirname, '../../../../../bsng-frontend/public/img/custom');
+      const uploadDir = path.join(process.cwd(), '../bsng-frontend/public/img/custom');
       
       if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true });

@@ -85,7 +85,7 @@ export class UpdatesController {
     } else {
       const ext = path.extname(image.originalname);
       const filename = `${crypto.randomBytes(16).toString('hex')}${ext}`;
-      const uploadDir = path.join(__dirname, '../../../../../bsng-frontend/public/img/custom/updates');
+      const uploadDir = path.join(process.cwd(), '../bsng-frontend/public/img/custom/updates');
       
       if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true });
