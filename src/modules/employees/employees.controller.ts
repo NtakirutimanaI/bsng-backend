@@ -28,12 +28,14 @@ export class EmployeesController {
     @Query('limit') limit: number = 10,
     @Query('search') search: string = '',
     @Query('department') department: string = 'all',
+    @Query('siteId') siteId: string = 'all',
   ) {
     return this.employeesService.findAll(
       Number(page),
       Number(limit),
       search,
       department,
+      siteId,
     );
   }
 

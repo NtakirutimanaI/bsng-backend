@@ -20,8 +20,13 @@ export class FinanceService {
     return await this.incomeRepository.save(income);
   }
 
-  async findAllIncome() {
-    return await this.incomeRepository.find({ order: { date: 'DESC' } });
+  async findAllIncome(siteId?: string) {
+    const where = siteId ? { siteId } : {};
+    return await this.incomeRepository.find({
+      where,
+      order: { date: 'DESC' },
+      relations: ['site'],
+    });
   }
 
   async createExpense(createExpenseDto: CreateExpenseDto) {
@@ -29,17 +34,27 @@ export class FinanceService {
     return await this.expenseRepository.save(expense);
   }
 
-  async findAllExpenses() {
-    return await this.expenseRepository.find({ order: { date: 'DESC' } });
+  async findAllExpenses(siteId?: string) {
+    const where = siteId ? { siteId } : {};
+    return await this.expenseRepository.find({
+      where,
+      order: { date: 'DESC' },
+      relations: ['site'],
+    });
   }
 
-  async calculateRevenue(projectId?: string) {
+  async calculateRevenue(projectId?: string, siteId?: string) {
     let incomeQuery = this.incomeRepository.createQueryBuilder('income');
     let expenseQuery = this.expenseRepository.createQueryBuilder('expense');
 
     if (projectId) {
-      incomeQuery = incomeQuery.where('income.projectId = :projectId', { projectId });
-      expenseQuery = expenseQuery.where('expense.projectId = :projectId', { projectId });
+      incomeQuery = incomeQuery.andWhere('income.projectId = :projectId', { projectId });
+      expenseQuery = expenseQuery.andWhere('expense.projectId = :projectId', { projectId });
+    }
+
+    if (siteId) {
+      incomeQuery = incomeQuery.andWhere('income.siteId = :siteId', { siteId });
+      expenseQuery = expenseQuery.andWhere('expense.siteId = :siteId', { siteId });
     }
 
     const { totalIncome } = await incomeQuery.select('SUM(income.amount)', 'totalIncome').getRawOne();
@@ -55,7 +70,7 @@ export class FinanceService {
     };
   }
 
-  async getDashboardStats() {
-    return this.calculateRevenue();
+  async getDashboardStats(siteId?: string) {
+    return this.calculateRevenue(undefined, siteId);
   }
 }

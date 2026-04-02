@@ -5,20 +5,26 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { Attendance } from './attendance.entity';
+import { Site } from '../../sites/entities/site.entity';
 
 @Entity('employees')
 export class Employee {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  // ... (existing columns)
+  @Column({ nullable: true })
+  siteId: string;
+
+  @ManyToOne(() => Site, (site) => site.employees, { nullable: true })
+  @JoinColumn({ name: 'siteId' })
+  site: Site;
 
   @Column({ unique: true })
   employeeId: string;
-
-  // ...
 
   @OneToMany(() => Attendance, (attendance) => attendance.employee)
   attendanceHistory: Attendance[];

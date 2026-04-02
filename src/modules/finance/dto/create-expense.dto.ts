@@ -23,6 +23,10 @@ export class CreateExpenseDto {
 
     @IsString()
     @IsOptional()
+    siteId?: string;
+
+    @IsString()
+    @IsOptional()
     reference?: string;
 
     @IsString()

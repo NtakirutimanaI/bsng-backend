@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Site } from '../../sites/entities/site.entity';
 
 @Entity('expenses')
 export class Expense {
@@ -19,6 +20,13 @@ export class Expense {
 
     @Column({ nullable: true })
     projectId: string;
+
+    @Column({ nullable: true })
+    siteId: string;
+
+    @ManyToOne(() => Site, { nullable: true })
+    @JoinColumn({ name: 'siteId' })
+    site: Site;
 
     @Column({ nullable: true })
     reference: string;

@@ -13,8 +13,8 @@ export class FinanceController {
   }
 
   @Get('income')
-  findAllIncome() {
-    return this.financeService.findAllIncome();
+  findAllIncome(@Query('siteId') siteId?: string) {
+    return this.financeService.findAllIncome(siteId);
   }
 
   @Post('expenses')
@@ -23,17 +23,20 @@ export class FinanceController {
   }
 
   @Get('expenses')
-  findAllExpenses() {
-    return this.financeService.findAllExpenses();
+  findAllExpenses(@Query('siteId') siteId?: string) {
+    return this.financeService.findAllExpenses(siteId);
   }
 
   @Get('revenue')
-  calculateRevenue(@Query('projectId') projectId?: string) {
-    return this.financeService.calculateRevenue(projectId);
+  calculateRevenue(
+    @Query('projectId') projectId?: string,
+    @Query('siteId') siteId?: string,
+  ) {
+    return this.financeService.calculateRevenue(projectId, siteId);
   }
 
   @Get('dashboard')
-  getDashboardStats() {
-    return this.financeService.getDashboardStats();
+  getDashboardStats(@Query('siteId') siteId?: string) {
+    return this.financeService.getDashboardStats(siteId);
   }
 }

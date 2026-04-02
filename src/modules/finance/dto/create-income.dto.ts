@@ -23,6 +23,10 @@ export class CreateIncomeDto {
 
     @IsString()
     @IsOptional()
+    siteId?: string;
+
+    @IsString()
+    @IsOptional()
     reference?: string;
 
     @IsString()

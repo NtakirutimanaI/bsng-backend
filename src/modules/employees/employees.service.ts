@@ -447,9 +447,11 @@ export class EmployeesService {
     limit: number = 10,
     search: string = '',
     department: string = 'all',
+    siteId: string = 'all',
   ) {
     const queryBuilder =
-      this.employeesRepository.createQueryBuilder('employee');
+      this.employeesRepository.createQueryBuilder('employee')
+        .leftJoinAndSelect('employee.site', 'site');
 
     if (search) {
       queryBuilder.andWhere(
@@ -462,6 +464,10 @@ export class EmployeesService {
       queryBuilder.andWhere('employee.department = :department', {
         department,
       });
+    }
+
+    if (siteId && siteId !== 'all') {
+      queryBuilder.andWhere('employee.siteId = :siteId', { siteId });
     }
 
     const [data, total] = await queryBuilder

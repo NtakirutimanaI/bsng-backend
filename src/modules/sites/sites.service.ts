@@ -18,7 +18,20 @@ export class SitesService {
   }
 
   async findAll() {
-    return await this.sitesRepository.find({ order: { createdAt: 'DESC' } });
+    const sites = await this.sitesRepository.createQueryBuilder('site')
+      .leftJoinAndSelect('site.employees', 'employee')
+      .leftJoinAndSelect('site.expenses', 'expense')
+      .orderBy('site.createdAt', 'DESC')
+      .getMany();
+
+    return sites.map(site => {
+      const expensesTotal = (site as any).expenses?.reduce((sum: number, exp: any) => sum + Number(exp.amount), 0) || 0;
+      return {
+        ...site,
+        employeesCount: (site as any).employees?.length || 0,
+        totalExpenses: expensesTotal,
+      };
+    });
   }
 
   async findOne(id: string) {
