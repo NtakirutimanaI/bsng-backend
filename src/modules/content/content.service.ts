@@ -119,15 +119,22 @@ export class ContentService {
   ) {
     const content = await this.findOne(id);
 
-    // Note: In Cloudinary we usually don't need to manually unlink local files
-    // as we are now using memoryStorage.
-
-    Object.assign(content, updateContentDto);
+    // Delete old image from Cloudinary if it exists and we're replacing it
+    if (image && content.image) {
+      const publicId = this.cloudinaryService.extractPublicId(content.image);
+      if (publicId) {
+        await this.cloudinaryService.deleteImage(publicId).catch(err => {
+          console.error(`Failed to delete old image from Cloudinary: ${err.message}`);
+        });
+      }
+    }
 
     if (image) {
       const result = await this.cloudinaryService.uploadImage(image, 'content');
       content.image = result.secure_url || result.url;
     }
+
+    Object.assign(content, updateContentDto);
 
     return this.contentRepository.save(content);
   }
@@ -145,7 +152,15 @@ export class ContentService {
   async remove(id: string) {
     const content = await this.findOne(id);
 
-    // Optional: add logic to delete from Cloudinary if needed
+    // Delete image from Cloudinary if it exists
+    if (content.image) {
+      const publicId = this.cloudinaryService.extractPublicId(content.image);
+      if (publicId) {
+        await this.cloudinaryService.deleteImage(publicId).catch(err => {
+          console.error(`Failed to delete image from Cloudinary: ${err.message}`);
+        });
+      }
+    }
 
     return this.contentRepository.remove(content);
   }

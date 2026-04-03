@@ -76,25 +76,20 @@ export class UpdatesController {
     @Param('id') id: string,
     @UploadedFile() image: Express.Multer.File,
   ) {
-    let imageUrl = '';
-    const isCloudinaryConfigured = this.configService.get('CLOUDINARY_CLOUD_NAME') && this.configService.get('CLOUDINARY_CLOUD_NAME') !== 'your_cloud_name';
-
-    if (isCloudinaryConfigured) {
-      const result = await this.cloudinaryService.uploadImage(image, 'updates');
-      imageUrl = result.secure_url || result.url;
-    } else {
-      const ext = path.extname(image.originalname);
-      const filename = `${crypto.randomBytes(16).toString('hex')}${ext}`;
-      const uploadDir = path.join(process.cwd(), 'uploads', 'img', 'custom', 'updates');
-      
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
+    const existingUpdate = await this.updatesService.findOne(id);
+    
+    // Delete old image if it's a Cloudinary one
+    if (existingUpdate?.image) {
+      const publicId = this.cloudinaryService.extractPublicId(existingUpdate.image);
+      if (publicId) {
+        await this.cloudinaryService.deleteImage(publicId).catch(err => {
+          console.error(`Failed to delete old image from Cloudinary: ${err.message}`);
+        });
       }
-      
-      const filePath = path.join(uploadDir, filename);
-      fs.writeFileSync(filePath, image.buffer);
-      imageUrl = `/img/custom/updates/${filename}`;
     }
+
+    const result = await this.cloudinaryService.uploadImage(image, 'updates');
+    const imageUrl = result.secure_url || result.url;
 
     await this.updatesService.update(id, { image: imageUrl });
     return { url: imageUrl, id };

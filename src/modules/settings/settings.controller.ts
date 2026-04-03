@@ -49,26 +49,22 @@ export class SettingsController {
     @UploadedFile() image: Express.Multer.File,
     @Body('key') key: string,
   ) {
-    let imageUrl = '';
-    const isCloudinaryConfigured = this.configService.get('CLOUDINARY_CLOUD_NAME') && this.configService.get('CLOUDINARY_CLOUD_NAME') !== 'your_cloud_name';
-
-    if (isCloudinaryConfigured) {
-      const result = await this.cloudinaryService.uploadImage(image, 'settings');
-      imageUrl = result.secure_url || result.url;
-    } else {
-      // Create local fallback, saving to frontend's public directory
-      const ext = path.extname(image.originalname);
-      const filename = `${crypto.randomBytes(16).toString('hex')}${ext}`;
-      const uploadDir = path.join(process.cwd(), 'uploads', 'img', 'custom');
+    if (key) {
+      const existingSettings = await this.settingsService.findAll();
+      const currentSetting = existingSettings.find(s => s.key === key);
       
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
+      if (currentSetting?.value) {
+        const publicId = this.cloudinaryService.extractPublicId(currentSetting.value);
+        if (publicId) {
+          await this.cloudinaryService.deleteImage(publicId).catch(err => {
+            console.error(`Failed to delete old image from Cloudinary: ${err.message}`);
+          });
+        }
       }
-      
-      const filePath = path.join(uploadDir, filename);
-      fs.writeFileSync(filePath, image.buffer);
-      imageUrl = `/img/custom/${filename}`;
     }
+
+    const result = await this.cloudinaryService.uploadImage(image, 'settings');
+    const imageUrl = result.secure_url || result.url;
 
     if (key) {
       await this.settingsService.updateValue(key, imageUrl);

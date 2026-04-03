@@ -12,6 +12,7 @@ export class CloudinaryService {
       const upload = cloudinary.uploader.upload_stream(
         {
           folder: folder,
+          resource_type: 'auto',
         },
         (error, result) => {
           if (error) return reject(error);
@@ -25,5 +26,35 @@ export class CloudinaryService {
       readableStream.push(null);
       readableStream.pipe(upload);
     });
+  }
+
+  async deleteImage(publicId: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+      cloudinary.uploader.destroy(publicId, (error, result) => {
+        if (error) return reject(error);
+        resolve(result);
+      });
+    });
+  }
+
+  extractPublicId(url: string): string | null {
+    if (!url || !url.includes('cloudinary.com')) return null;
+    
+    // Cloudinary URL format: 
+    // https://res.cloudinary.com/[cloud_name]/image/upload/v[version]/[folder]/[filename].[ext]
+    // We need [folder]/[filename]
+    const parts = url.split('/');
+    const uploadIndex = parts.indexOf('upload');
+    if (uploadIndex === -1) return null;
+
+    // Everything after v[version]/
+    const relevantParts = parts.slice(uploadIndex + 2);
+    const lastPart = relevantParts[relevantParts.length - 1];
+    
+    // Remove extension
+    const filenameWithoutExt = lastPart.split('.')[0];
+    relevantParts[relevantParts.length - 1] = filenameWithoutExt;
+    
+    return relevantParts.join('/');
   }
 }
