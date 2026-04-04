@@ -105,7 +105,19 @@ export class PropertiesController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  async remove(@Param('id') id: string) {
+    const property = await this.propertiesService.findOne(id);
+    if (property) {
+      const imageFields = ['image', 'image2', 'image3'];
+      for (const field of imageFields) {
+        if (property[field]) {
+          const publicId = this.cloudinaryService.extractPublicId(property[field]);
+          if (publicId) {
+            await this.cloudinaryService.deleteImage(publicId).catch(() => {});
+          }
+        }
+      }
+    }
     return this.propertiesService.remove(id);
   }
 }

@@ -75,8 +75,8 @@ export class SettingsController {
   @Post('sync-github')
   async syncGithub() {
     try {
-      const frontendDir = path.join(__dirname, '../../../../../bsng-frontend');
-      const backendDir = path.join(__dirname, '../../../../../bsng-backend');
+      const frontendDir = path.join(process.cwd(), '../bsng-frontend');
+      const backendDir = process.cwd();
 
       for (const repoDir of [frontendDir, backendDir]) {
         if (!fs.existsSync(repoDir)) continue;

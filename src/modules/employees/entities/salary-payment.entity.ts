@@ -14,7 +14,7 @@ export class SalaryPayment {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column()
+    @Column({ nullable: true })
     employeeId: string;
 
     @ManyToOne(() => Employee, { eager: false })

@@ -11,6 +11,7 @@ import { SettingsModule } from '../settings/settings.module';
 import { ServicesModule } from '../services/services.module';
 import { EmployeesModule } from '../employees/employees.module';
 import { EventsModule } from '../events/events.module';
+import { SitesModule } from '../sites/sites.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { EventsModule } from '../events/events.module';
     ServicesModule,
     EmployeesModule,
     EventsModule,
+    SitesModule,
   ],
   providers: [SeedService],
 })

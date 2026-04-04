@@ -126,6 +126,83 @@ export class SettingsService {
         description: 'Hero background image',
         isPublic: true,
       },
+      // Homepage Features
+      {
+        key: 'home_feature_1_title',
+        value: JSON.stringify({
+          en: 'Residential Construction',
+          rw: 'Ubwubatsi bw\'Inzu zo Guturamo',
+          fr: 'Construction Résidentielle',
+          sw: 'Ujenzi wa Makazi',
+        }),
+        group: 'home',
+        description: 'First feature title on home',
+        isPublic: true,
+      },
+      {
+        key: 'home_feature_2_title',
+        value: JSON.stringify({
+          en: 'Commercial Construction',
+          rw: 'Ubwubatsi bw\'Inzu z\'Ubucuruzi',
+          fr: 'Construction Commerciale',
+          sw: 'Ujenzi wa Biashara',
+        }),
+        group: 'home',
+        description: 'Second feature title on home',
+        isPublic: true,
+      },
+      {
+        key: 'home_feature_3_title',
+        value: JSON.stringify({
+          en: 'Project Management',
+          rw: 'Igenamigambi ry\'Imishinga',
+          fr: 'Gestion de Projet',
+          sw: 'Usimamizi wa Mradi',
+        }),
+        group: 'home',
+        description: 'Third feature title on home',
+        isPublic: true,
+      },
+      {
+        key: 'home_feature_4_title',
+        value: JSON.stringify({
+          en: 'Fair Prices',
+          rw: 'Ibiciro Byiza',
+          fr: 'Prix Équitables',
+          sw: 'Bei Nzuri',
+        }),
+        group: 'home',
+        description: 'Fourth feature title on home',
+        isPublic: true,
+      },
+      {
+        key: 'home_feature_1_icon',
+        value: 'building',
+        group: 'home',
+        description: 'Icon for first feature (building, hardhat, wallet)',
+        isPublic: true,
+      },
+      {
+        key: 'home_feature_2_icon',
+        value: 'building',
+        group: 'home',
+        description: 'Icon for second feature (building, hardhat, wallet)',
+        isPublic: true,
+      },
+      {
+        key: 'home_feature_3_icon',
+        value: 'hardhat',
+        group: 'home',
+        description: 'Icon for third feature (building, hardhat, wallet)',
+        isPublic: true,
+      },
+      {
+        key: 'home_feature_4_icon',
+        value: 'wallet',
+        group: 'home',
+        description: 'Icon for fourth feature (building, hardhat, wallet)',
+        isPublic: true,
+      },
 
       // About Page
       {

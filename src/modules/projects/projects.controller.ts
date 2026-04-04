@@ -8,6 +8,7 @@ import {
   Put,
   Patch,
   Query,
+  HttpException,
 } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
 import { Project } from './entities/project.entity';
@@ -22,18 +23,24 @@ export class ProjectsController {
   }
 
   @Get()
-  findAll(
+  async findAll(
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
     @Query('search') search: string = '',
     @Query('status') status: string = 'all',
   ) {
-    return this.projectsService.findAll(
-      Number(page),
-      Number(limit),
-      search,
-      status,
-    );
+    try {
+      return await this.projectsService.findAll(
+        Number(page),
+        Number(limit),
+        search,
+        status,
+      );
+    } catch (error: any) {
+      console.error('FIND ALL Projects Error:', error);
+      require('fs').writeFileSync('test_err2.txt', error.stack || error.message || JSON.stringify(error));
+      throw new HttpException(error.message || 'Error', 500);
+    }
   }
 
   @Get(':id')
@@ -42,16 +49,26 @@ export class ProjectsController {
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() updateProjectDto: Partial<Project>) {
-    return this.projectsService.update(id, updateProjectDto);
+  async update(@Param('id') id: string, @Body() updateProjectDto: Partial<Project>) {
+    try {
+      return await this.projectsService.update(id, updateProjectDto);
+    } catch (error: any) {
+      console.error('PUT Project Error:', error);
+      throw new HttpException(error.message || 'Error', 500);
+    }
   }
 
   @Patch(':id')
-  partialUpdate(
+  async partialUpdate(
     @Param('id') id: string,
     @Body() updateProjectDto: Partial<Project>,
   ) {
-    return this.projectsService.update(id, updateProjectDto);
+    try {
+      return await this.projectsService.update(id, updateProjectDto);
+    } catch (error: any) {
+      console.error('PATCH Project Error:', error);
+      throw new HttpException(error.message || 'Error', 500);
+    }
   }
 
   @Delete(':id')

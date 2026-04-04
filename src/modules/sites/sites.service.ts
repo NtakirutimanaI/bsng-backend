@@ -17,14 +17,25 @@ export class SitesService {
     return await this.sitesRepository.save(site);
   }
 
-  async findAll() {
-    const sites = await this.sitesRepository.createQueryBuilder('site')
+  async findAll(page: number = 1, limit: number = 10, search: string = '') {
+    const queryBuilder = this.sitesRepository.createQueryBuilder('site')
       .leftJoinAndSelect('site.employees', 'employee')
-      .leftJoinAndSelect('site.expenses', 'expense')
-      .orderBy('site.createdAt', 'DESC')
-      .getMany();
+      .leftJoinAndSelect('site.expenses', 'expense');
 
-    return sites.map(site => {
+    if (search) {
+      queryBuilder.andWhere(
+        '(site.name ILIKE :search OR site.code ILIKE :search OR site.location ILIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+
+    const [sites, total] = await queryBuilder
+      .skip((page - 1) * limit)
+      .take(limit)
+      .orderBy('site.createdAt', 'DESC')
+      .getManyAndCount();
+
+    const data = sites.map(site => {
       const expensesTotal = (site as any).expenses?.reduce((sum: number, exp: any) => sum + Number(exp.amount), 0) || 0;
       return {
         ...site,
@@ -32,6 +43,8 @@ export class SitesService {
         totalExpenses: expensesTotal,
       };
     });
+
+    return { data, total };
   }
 
   async findOne(id: string) {
@@ -41,9 +54,8 @@ export class SitesService {
   }
 
   async update(id: string, updateSiteDto: UpdateSiteDto) {
-    const site = await this.findOne(id);
-    Object.assign(site, updateSiteDto);
-    return await this.sitesRepository.save(site);
+    await this.sitesRepository.update(id, updateSiteDto);
+    return await this.findOne(id);
   }
 
   async remove(id: string) {

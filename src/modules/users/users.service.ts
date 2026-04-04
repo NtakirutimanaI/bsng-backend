@@ -16,12 +16,23 @@ export class UsersService {
   }
 
   async findOne(id: string): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { id }, relations: ['role'] });
+    return this.usersRepository.findOne({ where: { id }, relations: ['role', 'site'] });
   }
 
-  async update(id: string, userData: Partial<User>): Promise<User | null> {
-    await this.usersRepository.update(id, userData);
-    return this.usersRepository.findOne({ where: { id }, relations: ['role'] });
+  async update(id: string, userData: any): Promise<User | null> {
+    const user = await this.usersRepository.findOne({ where: { id }, relations: ['role', 'site'] });
+    if (!user) return null;
+
+    // Reset relation objects if IDs are changing to prevent TypeORM object-conflict
+    if (userData.siteId !== undefined) {
+       user.site = null as any; 
+    }
+    if (userData.roleId !== undefined) {
+       user.role = null as any;
+    }
+
+    Object.assign(user, userData);
+    return this.usersRepository.save(user);
   }
 
   async findByUsername(username: string): Promise<User | null> {
@@ -48,6 +59,7 @@ export class UsersService {
   async findAll(page: number = 1, limit: number = 10, userRole?: string, search?: string) {
     const qb = this.usersRepository.createQueryBuilder('user')
       .leftJoinAndSelect('user.role', 'role')
+      .leftJoinAndSelect('user.site', 'site')
       .orderBy('user.createdAt', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);

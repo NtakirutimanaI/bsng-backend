@@ -1,0 +1,6 @@
+Error: Project not found
+    at ProjectsService.update (A:\MAKE IT SOLUTIONS ACTIONS\Projects\bsngltd\bsng-backend\src\modules\projects\projects.service.ts:57:25)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ProjectsController.partialUpdate (A:\MAKE IT SOLUTIONS ACTIONS\Projects\bsngltd\bsng-backend\src\modules\projects\projects.controller.ts:62:14)
+    at async A:\MAKE IT SOLUTIONS ACTIONS\Projects\bsngltd\bsng-backend\node_modules\@nestjs\core\router\router-execution-context.js:46:28
+    at async A:\MAKE IT SOLUTIONS ACTIONS\Projects\bsngltd\bsng-backend\node_modules\@nestjs\core\router\router-proxy.js:9:17

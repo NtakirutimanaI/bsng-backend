@@ -11,6 +11,9 @@ export class ProjectsService {
   ) {}
 
   create(data: Partial<Project>) {
+    if (data.gallery && Array.isArray(data.gallery)) {
+      data.gallery = JSON.stringify(data.gallery) as any;
+    }
     const project = this.projectsRepository.create(data);
     return this.projectsRepository.save(project);
   }
@@ -53,8 +56,16 @@ export class ProjectsService {
   }
 
   async update(id: string, data: Partial<Project>) {
+    const project = await this.projectsRepository.findOne({ where: { id } });
+    if (!project) throw new Error('Project not found');
+    
+    // Fix TypeORM Postgres JSON array serialization constraint
+    if (data.gallery !== undefined && Array.isArray(data.gallery)) {
+      data.gallery = JSON.stringify(data.gallery) as any;
+    }
+
     await this.projectsRepository.update(id, data);
-    return this.findOne(id);
+    return this.projectsRepository.findOne({ where: { id } });
   }
 
   remove(id: string) {

@@ -96,7 +96,14 @@ export class UpdatesController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  async remove(@Param('id') id: string) {
+    const update = await this.updatesService.findOne(id);
+    if (update?.image) {
+      const publicId = this.cloudinaryService.extractPublicId(update.image);
+      if (publicId) {
+        await this.cloudinaryService.deleteImage(publicId).catch(() => {});
+      }
+    }
     return this.updatesService.remove(id);
   }
 }

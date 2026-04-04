@@ -7,6 +7,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Role } from '../../rbac/entities/role.entity';
+import { Site } from '../../sites/entities/site.entity';
 
 export enum UserRole {
   SUPER_ADMIN = 'super_admin',
@@ -36,25 +37,25 @@ export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ length: 100, unique: true })
+  @Column({ type: 'varchar', length: 100, unique: true })
   username: string;
 
-  @Column({ length: 255, unique: true })
+  @Column({ type: 'varchar', length: 255, unique: true })
   email: string;
 
-  @Column({ length: 20, unique: true, nullable: true })
+  @Column({ type: 'varchar', length: 20, unique: true, nullable: true })
   phone: string;
 
-  @Column({ name: 'google_id', nullable: true })
+  @Column({ name: 'google_id', type: 'varchar', nullable: true })
   googleId: string;
 
-  @Column({ name: 'password_hash', length: 255, nullable: true })
+  @Column({ name: 'password_hash', type: 'varchar', length: 255, nullable: true })
   passwordHash: string;
 
-  @Column({ name: 'full_name', length: 255 })
+  @Column({ name: 'full_name', type: 'varchar', length: 255 })
   fullName: string;
 
-  @Column({ length: 255, nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   address: string;
 
   @Column({ type: 'int', nullable: true })
@@ -66,6 +67,13 @@ export class User {
   @ManyToOne(() => Role, (role) => role.users)
   @JoinColumn({ name: 'role_id' })
   role: Role;
+
+  @Column({ name: 'site_id', nullable: true })
+  siteId: string;
+
+  @ManyToOne(() => Site, { nullable: true })
+  @JoinColumn({ name: 'site_id' })
+  site: Site;
 
   @Column({
     name: 'user_role',

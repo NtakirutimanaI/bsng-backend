@@ -53,6 +53,18 @@ export class Project {
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
+  @Column({ name: 'site_id', nullable: true })
+  siteId: string;
+
+  @Column({ name: 'is_published', type: 'boolean', default: false })
+  isPublished: boolean;
+
+  @Column({ nullable: true })
+  imageUrl: string;
+
+  @Column({ type: 'json', nullable: true })
+  gallery: string[];
+
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 }
