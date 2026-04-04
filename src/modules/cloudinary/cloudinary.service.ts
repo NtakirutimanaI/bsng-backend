@@ -11,12 +11,12 @@ export class CloudinaryService {
     const isCloudinaryConfigured = process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_KEY !== 'your_api_key';
 
     if (!isCloudinaryConfigured) {
-      // Setup a permanent local storage solution inside the frontend repository
-      // so 'sync-github' will commit it permanently to Github, avoiding data loss on render!
+      // Setup a permanent local storage solution inside the backend directory!
+      // This ensures 'main.ts' serves it instantly over the backend network while 'sync-github' will commit it!
       const path = require('path');
       const fs = require('fs');
       
-      const customDir = path.join(process.cwd(), '../bsng-frontend/public/img/custom');
+      const customDir = path.join(process.cwd(), 'uploads', 'img', 'custom');
       if (!fs.existsSync(customDir)) {
         fs.mkdirSync(customDir, { recursive: true });
       }
