@@ -36,7 +36,7 @@ export class SettingsService {
   ) {
     const existing = await this.settingsRepository.findOne({ where: { key } });
     if (existing) {
-      existing.value = value;
+      // Do NOT overwrite existing.value here! It was maliciously erasing all user edits on server start.
       if (description) existing.description = description;
       existing.group = group;
       existing.isPublic = isPublic;
