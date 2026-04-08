@@ -43,16 +43,27 @@ export class DashboardService {
   }
 
   async getStats(role: string) {
-    // Fetch real counts using existing services
-    const projects = await this.projectsService.findAll(1, 1);
-    const employees = await this.employeesService.findAll(1, 1);
-    const properties = await this.propertiesService.findAll(1, 1);
-    const payments = await this.paymentsService.findAll(1, 1000);
+    // Fetch all real counts in parallel to significantly improve speed
+    const [
+      projects,
+      employees,
+      properties,
+      payments,
+      monthlyStats,
+      projectStatusCounts
+    ] = await Promise.all([
+      this.projectsService.findAll(1, 1),
+      this.employeesService.findAll(1, 1),
+      this.propertiesService.findAll(1, 1),
+      this.paymentsService.findAll(1, 1000),
+      this.paymentsService.getMonthlyStats(),
+      this.projectsService.getProjectStatusCounts()
+    ]);
 
     // Calculate Revenue (Total client_payment income)
     const totalRevenue = payments.data
       .filter((p) => p.type === 'client_payment' && ['completed', 'paid'].includes(p.status))
-      .reduce((sum, p) => sum + Number(p.amount), 0);
+      .reduce((sum, p) => sum + Number(p.amount || 0), 0);
 
     // Calculate Expenses (Total salary/contractor/supplier)
     const totalExpenses = payments.data
@@ -61,11 +72,7 @@ export class DashboardService {
           ['salary', 'contractor', 'supplier', 'expense'].includes(p.type) &&
           ['completed', 'paid'].includes(p.status),
       )
-      .reduce((sum, p) => sum + Number(p.amount), 0);
-
-    const monthlyStats = await this.paymentsService.getMonthlyStats();
-    const projectStatusCounts =
-      await this.projectsService.getProjectStatusCounts();
+      .reduce((sum, p) => sum + Number(p.amount || 0), 0);
 
     const stats: any = {
       adminStats: [
