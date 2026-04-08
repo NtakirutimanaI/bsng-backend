@@ -6,6 +6,7 @@ import {
   Param,
   Delete,
   Put,
+  Patch,
   Query,
 } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
@@ -30,7 +31,7 @@ export class BookingsController {
     return this.bookingsService.findOne(id);
   }
 
-  @Put(':id')
+  @Patch(':id')
   update(@Param('id') id: string, @Body() updateBookingDto: Partial<Booking>) {
     return this.bookingsService.update(id, updateBookingDto);
   }

@@ -89,7 +89,7 @@ export class UpdatesController {
     }
 
     const result = await this.cloudinaryService.uploadImage(image, 'updates');
-    const imageUrl = result.secure_url || result.url;
+    const imageUrl = `${result.secure_url || result.url}?v=${Date.now()}`;
 
     await this.updatesService.update(id, { image: imageUrl });
     return { url: imageUrl, id };
@@ -101,7 +101,9 @@ export class UpdatesController {
     if (update?.image) {
       const publicId = this.cloudinaryService.extractPublicId(update.image);
       if (publicId) {
-        await this.cloudinaryService.deleteImage(publicId).catch(() => {});
+        await this.cloudinaryService.deleteImage(publicId).catch(() => {
+          console.error('Failed to delete image from Cloudinary');
+        });
       }
     }
     return this.updatesService.remove(id);

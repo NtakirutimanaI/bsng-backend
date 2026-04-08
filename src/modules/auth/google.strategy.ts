@@ -30,11 +30,23 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     done: VerifyCallback,
   ): Promise<any> {
     const { name, emails, photos, id } = profile;
+
+    // Safety checks to prevent 500 Internal Server Error when Google profile is partially empty
+    const email = emails?.[0]?.value;
+    const firstName = name?.givenName || 'Google';
+    const lastName = name?.familyName || 'User';
+    const picture = photos?.[0]?.value || '';
+
+    if (!email) {
+      // Return error to prevent server crash
+      return done(new Error('No email found in Google profile'), false);
+    }
+
     const user = await this.authService.validateGoogleUser({
-      email: emails[0].value,
-      firstName: name.givenName,
-      lastName: name.familyName,
-      picture: photos[0].value,
+      email,
+      firstName,
+      lastName,
+      picture: picture,
       googleId: id,
     });
     done(null, user);

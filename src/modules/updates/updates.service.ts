@@ -47,13 +47,20 @@ export class UpdatesService {
     };
   }
 
-  findOne(id: string) {
-    return this.updatesRepository.findOne({ where: { id } });
+  async findOne(id: string): Promise<UpdateEntity> {
+    const start = Date.now();
+    const result = await this.updatesRepository.findOne({ where: { id } });
+    const duration = Date.now() - start;
+    console.log(`Query findOne executed in ${duration}ms`);
+    return result;
   }
 
-  async update(id: string, data: Partial<UpdateEntity>) {
-    await this.updatesRepository.update(id, data);
-    return this.findOne(id);
+  async update(id: string, updateData: Partial<UpdateEntity>): Promise<UpdateEntity> {
+    const start = Date.now();
+    const result = await this.updatesRepository.save({ id, ...updateData });
+    const duration = Date.now() - start;
+    console.log(`Query update executed in ${duration}ms`);
+    return result;
   }
 
   remove(id: string) {

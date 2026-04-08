@@ -8,11 +8,16 @@ export class CloudinaryService {
     file: Express.Multer.File,
     folder: string = 'bsng',
   ): Promise<any> {
-    const isCloudinaryConfigured = process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_KEY !== 'your_api_key';
+    const isCloudinaryConfigured = process.env.CLOUDINARY_API_KEY && 
+                                   process.env.CLOUDINARY_API_KEY !== 'your_api_key' &&
+                                   process.env.CLOUDINARY_API_KEY !== '';
 
     if (!isCloudinaryConfigured) {
-      // Setup a permanent local storage solution inside the backend directory!
-      // This ensures 'main.ts' serves it instantly over the backend network while 'sync-github' will commit it!
+      // NOTE: Render and Vercel use an EPHEMERAL filesystem. 
+      // Files saved in 'uploads' will be deleted automatically on every restart or redeploy.
+      // This local storage is only intended for local development testing.
+      console.warn('⚠️ CLOUDINARY NOT CONFIGURED: Falling back to ephemeral local storage. Images WILL be lost on server restart.');
+      
       const path = require('path');
       const fs = require('fs');
       

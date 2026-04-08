@@ -9,3 +9,6 @@ services:
       - key: PORT
         value: 10000
     autoDeploy: true
+    static:
+      - source: public
+        destination: /public
