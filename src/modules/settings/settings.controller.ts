@@ -49,27 +49,40 @@ export class SettingsController {
     @UploadedFile() image: Express.Multer.File,
     @Body('key') key: string,
   ) {
-    if (key) {
-      const existingSettings = await this.settingsService.findAll();
-      const currentSetting = existingSettings.find(s => s.key === key);
-      
-      if (currentSetting?.value) {
-        const publicId = this.cloudinaryService.extractPublicId(currentSetting.value);
-        if (publicId) {
-          await this.cloudinaryService.deleteImage(publicId).catch(err => {
-            console.error(`Failed to delete old image from Cloudinary: ${err.message}`);
-          });
+    try {
+      if (!image) {
+        return { success: false, message: 'No image file provided in request.' };
+      }
+
+      if (key) {
+        const existingSettings = await this.settingsService.findAll();
+        const currentSetting = existingSettings.find(s => s.key === key);
+        
+        if (currentSetting?.value) {
+          const publicId = this.cloudinaryService.extractPublicId(currentSetting.value);
+          if (publicId) {
+            await this.cloudinaryService.deleteImage(publicId).catch(err => {
+              console.error(`Failed to delete old image from Cloudinary: ${err.message}`);
+            });
+          }
         }
       }
-    }
 
-    const result = await this.cloudinaryService.uploadImage(image, 'settings');
-    const imageUrl = result.secure_url || result.url;
+      const result = await this.cloudinaryService.uploadImage(image, 'settings');
+      const imageUrl = result.secure_url || result.url;
 
-    if (key) {
-      await this.settingsService.updateValue(key, imageUrl);
+      if (key) {
+        await this.settingsService.updateValue(key, imageUrl);
+      }
+      return { success: true, url: imageUrl, key };
+    } catch (error) {
+      console.error('Upload Error:', error);
+      return { 
+        success: false, 
+        message: error.message || 'Unknown server error during upload',
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      };
     }
-    return { url: imageUrl, key };
   }
   
   @Post('sync-github')

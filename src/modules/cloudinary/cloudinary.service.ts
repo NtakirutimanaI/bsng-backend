@@ -8,9 +8,10 @@ export class CloudinaryService {
     file: Express.Multer.File,
     folder: string = 'bsng_files',
   ): Promise<any> {
-    const isCloudinaryConfigured = process.env.CLOUDINARY_API_KEY && 
-                                   process.env.CLOUDINARY_API_KEY !== 'your_api_key' &&
-                                   process.env.CLOUDINARY_API_KEY !== '';
+    const config = cloudinary.config();
+    const isCloudinaryConfigured = config.api_key && 
+                                   config.api_key !== 'your_api_key' &&
+                                   config.api_key !== '';
 
     if (!isCloudinaryConfigured) {
       console.warn('⚠️ CLOUDINARY NOT CONFIGURED: Falling back to ephemeral local storage.');
@@ -59,7 +60,8 @@ export class CloudinaryService {
   }
 
   async deleteImage(publicId: string): Promise<any> {
-    const isCloudinaryConfigured = process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_KEY !== 'your_api_key';
+    const config = cloudinary.config();
+    const isCloudinaryConfigured = config.api_key && config.api_key !== 'your_api_key';
     if (!isCloudinaryConfigured) {
        // Ignore deletes for local permanent storage to preserve history or handle manually later
        return Promise.resolve({ result: 'ok' });
