@@ -9,13 +9,23 @@ import {
   Query,
   HttpException,
   HttpStatus,
+  UploadedFile,
+  UseInterceptors,
+  InternalServerErrorException,
+  BadRequestException,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { EmployeesService } from './employees.service';
 import { Employee } from './entities/employee.entity';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @Controller('employees')
 export class EmployeesController {
-  constructor(private readonly employeesService: EmployeesService) { }
+  constructor(
+    private readonly employeesService: EmployeesService,
+    private readonly cloudinaryService: CloudinaryService,
+  ) { }
 
   @Post()
   create(@Body() createEmployeeDto: Partial<Employee>) {
@@ -161,8 +171,53 @@ export class EmployeesController {
     return this.employeesService.update(id, updateEmployeeDto);
   }
 
+  @Post(':id/upload-image')
+  @UseInterceptors(
+    FileInterceptor('image', {
+      storage: memoryStorage(),
+    }),
+  )
+  async uploadImage(
+    @Param('id') id: string,
+    @UploadedFile() image: Express.Multer.File,
+  ) {
+    try {
+      if (!image) {
+        throw new BadRequestException('No image file selected.');
+      }
+
+      const employee = await this.employeesService.findOne(id);
+      
+      // Delete old image if it's a Cloudinary one
+      if (employee?.photo) {
+        const publicId = this.cloudinaryService.extractPublicId(employee.photo);
+        if (publicId) {
+          await this.cloudinaryService.deleteImage(publicId).catch(err => {
+            console.error(`Failed to delete old image from Cloudinary: ${err.message}`);
+          });
+        }
+      }
+
+      const result = await this.cloudinaryService.uploadImage(image, 'employees');
+      const imageUrl = result.secure_url || result.url;
+
+      await this.employeesService.update(id, { photo: imageUrl });
+      return { url: imageUrl, id };
+    } catch (error) {
+      console.error('Employee Upload Error:', error);
+      throw new InternalServerErrorException(error.message || 'Failed to upload employee photo.');
+    }
+  }
+
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  async remove(@Param('id') id: string) {
+    const employee = await this.employeesService.findOne(id);
+    if (employee?.photo) {
+      const publicId = this.cloudinaryService.extractPublicId(employee.photo);
+      if (publicId) {
+        await this.cloudinaryService.deleteImage(publicId).catch(() => {});
+      }
+    }
     return this.employeesService.remove(id);
   }
 }

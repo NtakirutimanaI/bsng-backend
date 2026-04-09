@@ -9,6 +9,8 @@ import {
   Query,
   UploadedFile,
   UseInterceptors,
+  InternalServerErrorException,
+  BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
@@ -76,23 +78,32 @@ export class UpdatesController {
     @Param('id') id: string,
     @UploadedFile() image: Express.Multer.File,
   ) {
-    const existingUpdate = await this.updatesService.findOne(id);
-    
-    // Delete old image if it's a Cloudinary one
-    if (existingUpdate?.image) {
-      const publicId = this.cloudinaryService.extractPublicId(existingUpdate.image);
-      if (publicId) {
-        await this.cloudinaryService.deleteImage(publicId).catch(err => {
-          console.error(`Failed to delete old image from Cloudinary: ${err.message}`);
-        });
+    try {
+      if (!image) {
+        throw new BadRequestException('No image file selected.');
       }
+
+      const existingUpdate = await this.updatesService.findOne(id);
+      
+      // Delete old image if it's a Cloudinary one
+      if (existingUpdate?.image) {
+        const publicId = this.cloudinaryService.extractPublicId(existingUpdate.image);
+        if (publicId) {
+          await this.cloudinaryService.deleteImage(publicId).catch(err => {
+            console.error(`Failed to delete old image from Cloudinary: ${err.message}`);
+          });
+        }
+      }
+
+      const result = await this.cloudinaryService.uploadImage(image, 'updates');
+      const imageUrl = `${result.secure_url || result.url}?v=${Date.now()}`;
+
+      await this.updatesService.update(id, { image: imageUrl });
+      return { url: imageUrl, id };
+    } catch (error) {
+      console.error('Update Upload Error:', error);
+      throw new InternalServerErrorException(error.message || 'Failed to upload update image.');
     }
-
-    const result = await this.cloudinaryService.uploadImage(image, 'updates');
-    const imageUrl = `${result.secure_url || result.url}?v=${Date.now()}`;
-
-    await this.updatesService.update(id, { image: imageUrl });
-    return { url: imageUrl, id };
   }
 
   @Delete(':id')

@@ -9,6 +9,8 @@ import {
   Query,
   UploadedFile,
   UseInterceptors,
+  InternalServerErrorException,
+  BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
@@ -83,25 +85,34 @@ export class PropertiesController {
     @UploadedFile() image: Express.Multer.File,
     @Body('field') field: string,
   ) {
-    const validFields = ['image', 'image2', 'image3'];
-    const updateField = validFields.includes(field) ? field : 'image';
-    
-    // Find current property to see if we should delete old Cloudinary image
-    const property = await this.propertiesService.findOne(id);
-    if (property && property[updateField]) {
-      const publicId = this.cloudinaryService.extractPublicId(property[updateField]);
-      if (publicId) {
-        await this.cloudinaryService.deleteImage(publicId).catch(err => {
-          console.error(`Failed to delete old image from Cloudinary: ${err.message}`);
-        });
+    try {
+      if (!image) {
+        throw new BadRequestException('No image file selected.');
       }
+      
+      const validFields = ['image', 'image2', 'image3'];
+      const updateField = validFields.includes(field) ? field : 'image';
+      
+      // Find current property to see if we should delete old Cloudinary image
+      const property = await this.propertiesService.findOne(id);
+      if (property && property[updateField]) {
+        const publicId = this.cloudinaryService.extractPublicId(property[updateField]);
+        if (publicId) {
+          await this.cloudinaryService.deleteImage(publicId).catch(err => {
+            console.error(`Failed to delete old image from Cloudinary: ${err.message}`);
+          });
+        }
+      }
+
+      const result = await this.cloudinaryService.uploadImage(image, 'properties');
+      const imageUrl = result.secure_url || result.url;
+
+      await this.propertiesService.update(id, { [updateField]: imageUrl });
+      return { url: imageUrl, id, field: updateField };
+    } catch (error) {
+      console.error('Property Upload Error:', error);
+      throw new InternalServerErrorException(error.message || 'Failed to upload property image. Please check your Cloudinary configuration.');
     }
-
-    const result = await this.cloudinaryService.uploadImage(image, 'properties');
-    const imageUrl = result.secure_url || result.url;
-
-    await this.propertiesService.update(id, { [updateField]: imageUrl });
-    return { url: imageUrl, id, field: updateField };
   }
 
   @Delete(':id')
