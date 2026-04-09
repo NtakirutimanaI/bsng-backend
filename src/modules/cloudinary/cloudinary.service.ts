@@ -14,6 +14,9 @@ export class CloudinaryService {
                                    config.api_key !== '';
 
     if (!isCloudinaryConfigured) {
+      if (process.env.VERCEL) {
+        throw new Error('CLOUD STORAGE ERROR: Cloudinary credentials (API KEY/SECRET) are missing in the Vercel environment. Please contact support to configure your cloud storage.');
+      }
       console.warn('⚠️ CLOUDINARY NOT CONFIGURED: Falling back to ephemeral local storage.');
       
       const path = require('path');
