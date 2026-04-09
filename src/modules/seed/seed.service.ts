@@ -51,6 +51,10 @@ export class SeedService implements OnModuleInit {
       }
       
       await this.settingsService.seed(); 
+      await this.seedServices();
+      await this.seedProperties();
+      await this.seedUpdates();
+      await this.seedEmployeesAuto();
       console.log('--- SYNCHRONIZATION COMPLETE ---');
     } catch (e) {
       console.error('Seeding Error:', e.message);
@@ -162,11 +166,70 @@ export class SeedService implements OnModuleInit {
     }
   }
 
-  async seedEmployees() {
-    // Basic employees seed if needed...
+  async seedServices() {
+    const defaultServices = [
+      { name: 'Residential Construction', title: 'Home Building', description: 'We build durable and beautiful residential homes tailored to your lifestyle.', icon: 'building', delay: '0.1s', isDark: true },
+      { name: 'Commercial Construction', title: 'Office & Business', description: 'Expert solutions for commercial buildings, warehouses, and corporate offices.', icon: 'building', delay: '0.3s', isDark: false },
+      { name: 'Project Management', title: 'Consultancy', description: 'Professional oversight and management of your construction projects from start to finish.', icon: 'hardhat', delay: '0.5s', isDark: true },
+      { name: 'Interior Design', title: 'Aesthetics', description: 'Modern and functional interior design solutions for homes and offices.', icon: 'building', delay: '0.1s', isDark: false },
+    ];
+
+    const current = await this.servicesService.findAll();
+    if (current && current.length > 0) return;
+
+    for (const s of defaultServices) {
+      await this.servicesService.create(s);
+    }
+    console.log(`Seeded ${defaultServices.length} default services.`);
   }
 
-  // Other seed methods truncated for brevity but remain intact in the logic
+  async seedProperties() {
+    const defaultProperties = [
+      { title: 'Luxury Villa in Rebero', location: 'Rebero, Kigali', price: 150000000, description: 'Spacious 5-bedroom villa with panoramic views of Kigali city.', bedrooms: 5, bathrooms: 4, size: 450, isForSale: true },
+      { title: 'Modern Office Space', location: 'Kigali Heights, Kimihurura', price: 2500000, description: 'Prime commercial location with glass facade and ample parking.', bedrooms: 0, bathrooms: 2, size: 200, isForRent: true, monthlyRent: 2500000 },
+      { title: 'Family Home', location: 'Kabeza, Kanombe', price: 75000000, description: 'Cozy family home with a garden and secure neighborhood.', bedrooms: 3, bathrooms: 2, size: 150, isForSale: true },
+    ];
+
+    const current = await this.propertiesService.findAll();
+    const data = Array.isArray(current) ? current : (current as any).data || [];
+    if (data.length > 0) return;
+
+    for (const p of defaultProperties) {
+      await this.propertiesService.create(p);
+    }
+    console.log(`Seeded ${defaultProperties.length} default properties.`);
+  }
+
+  async seedUpdates() {
+    const defaultUpdates = [
+      { title: 'BSNG Milestone Anniversary', category: 'Company', content: 'We are celebrating 10 years of building strong foundations in Rwanda.', date: new Date().toISOString() },
+      { title: 'New Safety Standards 2026', category: 'Events', content: 'Our team has completed advanced safety training for modern high-rise projects.', date: new Date().toISOString() },
+      { title: 'Sustainable Building Initiative', category: 'Projects', content: 'Integrating green technologies in all our upcoming residential developments.', date: new Date().toISOString() },
+    ];
+
+    const current = await this.updatesService.findAll();
+    const data = Array.isArray(current) ? current : (current as any).data || [];
+    if (data.length > 0) return;
+
+    for (const u of defaultUpdates) {
+      await this.updatesService.create(u);
+    }
+    console.log(`Seeded ${defaultUpdates.length} default updates.`);
+  }
+
+  async seedEmployeesAuto() {
+     const defaultStaff = [
+        { name: 'Innocent Ntakirutimana', role: 'Managing Director', photo: '/img/team-1.jpg', description: 'Experienced leader in civil engineering.' },
+        { name: 'M. Claudine', role: 'Senior Architect', photo: '/img/team-2.jpg', description: 'Award-winning architect with 15+ years experience.' },
+     ];
+     const current = await this.employeesService.findAll();
+     const data = Array.isArray(current) ? current : (current as any).data || [];
+     if (data.length > 0) return;
+     for (const s of defaultStaff) {
+         await this.employeesService.create(s);
+     }
+  }
+
   async seedData() { }
   async seedSettings() { }
 }
