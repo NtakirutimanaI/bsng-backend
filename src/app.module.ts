@@ -46,7 +46,7 @@ import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
         database: configService.get<string>('DB_NAME', 'bsng_db'),
         autoLoadEntities: true,
         synchronize: true, // Use carefully in production
-        ssl: configService.get<string>('DB_HOST')?.includes('render.com')
+        ssl: process.env.NODE_ENV === 'production' || process.env.VERCEL 
           ? { rejectUnauthorized: false }
           : false,
       }),
