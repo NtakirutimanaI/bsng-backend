@@ -32,14 +32,25 @@ export class SeedService implements OnModuleInit {
   ) { }
 
   async onModuleInit() {
-    console.log('--- GLOBAL WORKFORCE SYNCHRONIZATION ---');
+    console.log('--- GLOBAL WORKFORCE SYNCHRONIZATION (Background) ---');
+    // We do NOT await these so the server can boot and respond to Vercel instantly.
+    // This prevents "FUNCTION_INVOCATION_TIMEOUT" during the cold start.
+    this.runSeeding().catch(e => console.error('Background Seeding Error:', e.message));
+  }
+
+  private async runSeeding() {
     try {
       await this.seedSites();
       await this.seedRolesAndPermissions();
       await this.seedUsers();
-      await this.seedEmployees();
-      await this.autoMapUnassignedUsers();
-      await this.settingsService.seed(); // Force seed settings for public site visibility
+      
+      // Skip heavy scanning tasks in production to avoid Vercel timeouts
+      if (process.env.NODE_ENV !== 'production') {
+        await this.seedEmployees();
+        await this.autoMapUnassignedUsers();
+      }
+      
+      await this.settingsService.seed(); 
       console.log('--- SYNCHRONIZATION COMPLETE ---');
     } catch (e) {
       console.error('Seeding Error:', e.message);
@@ -47,7 +58,7 @@ export class SeedService implements OnModuleInit {
   }
 
   async seedRolesAndPermissions() {
-    const roles = ['super_admin', 'admin', 'manager', 'site_manager', 'employee', 'accountant', 'hr', 'auditor'];
+    const roles = ['super_admin', 'admin', 'manager', 'site_manager', 'employee', 'accountant', 'hr', 'auditor', 'client', 'editor', 'contractor'];
     for (const roleName of roles) {
       const exists = await this.rolesService.findRoleByName(roleName);
       if (!exists) {
@@ -87,6 +98,8 @@ export class SeedService implements OnModuleInit {
       { email: 'client@bsng.com', username: 'client', name: 'Valued Client', role: 'client', uRole: UserRole.CLIENT, phone: '1234567896', siteName: 'Kabeza' },
       { email: 'contractor@bsng.com', username: 'contractor', name: 'External Contractor', role: 'contractor', uRole: UserRole.CONTRACTOR, phone: '1234567897', siteName: 'Rebero2' },
       { email: 'info.buildstronggenerations@gmail.com', username: 'dev_user', name: 'Innocent N', role: 'admin', uRole: UserRole.ADMIN, phone: '1234567898', siteName: 'Rebero' },
+      { email: 'staff@bsng.com', username: 'staff_test', name: 'Staff Test', role: 'employee', uRole: UserRole.EMPLOYEE, phone: '1234567899', siteName: 'Kabeza' },
+      { email: 'test@bsng.com', username: 'test_user', name: 'Test User', role: 'client', uRole: UserRole.CLIENT, phone: '1234567810', siteName: 'Rebero2' },
     ];
 
     for (const u of usersToSeed) {
@@ -110,8 +123,8 @@ export class SeedService implements OnModuleInit {
       }
 
       if (existing) {
-        await this.usersService.update(existing.id, userData);
-        console.log(`Updated Credentials for: ${u.email} (${u.name}) -> ${u.siteName}`);
+        // console.log(`Identity exists, skipping update to save time: ${u.email}`);
+        continue;
       } else {
         await this.usersService.create(userData);
         console.log(`Seeded New Identity: ${u.email} (${u.name}) -> ${u.siteName}`);

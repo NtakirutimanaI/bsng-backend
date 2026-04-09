@@ -47,7 +47,7 @@ export class UpdatesService {
     };
   }
 
-  async findOne(id: string): Promise<UpdateEntity> {
+  async findOne(id: string): Promise<UpdateEntity | null> {
     const start = Date.now();
     const result = await this.updatesRepository.findOne({ where: { id } });
     const duration = Date.now() - start;

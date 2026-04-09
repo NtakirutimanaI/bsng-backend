@@ -19,8 +19,14 @@ async function bootstrap() {
       prefix: '/img/custom',
     });
 
-    // Middleware to log response times
+    // Middleware to log response times and handle CORS instantly
     app.use((req, res, next) => {
+      // Respond instantly to CORS pre-flights
+      if (req.method === 'OPTIONS') {
+        res.status(204).send();
+        return;
+      }
+
       const start = Date.now();
       res.on('finish', () => {
         const duration = Date.now() - start;

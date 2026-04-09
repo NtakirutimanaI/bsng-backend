@@ -39,16 +39,16 @@ import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
-        host: configService.get<string>('DB_HOST', 'localhost'),
-        port: configService.get<number>('DB_PORT', 5432),
-        username: configService.get<string>('DB_USERNAME', 'postgres'),
-        password: configService.get<string>('DB_PASSWORD', 'postgres'),
-        database: configService.get<string>('DB_NAME', 'bsng_db'),
+        url: `postgres://${configService.get<string>('DB_USERNAME', 'postgres.crqjtegzfvljlfihtoib')}:${encodeURIComponent(configService.get<string>('DB_PASSWORD', 'BuildStrong@2026!') || '')}@${configService.get<string>('DB_HOST', 'aws-1-eu-central-1.pooler.supabase.com')}:6543/${configService.get<string>('DB_NAME', 'postgres')}?pgbouncer=true&sslmode=no-verify`,
         autoLoadEntities: true,
-        synchronize: true, // Use carefully in production
-        ssl: process.env.NODE_ENV === 'production' || process.env.VERCEL 
-          ? { rejectUnauthorized: false }
-          : false,
+        extra: {
+          connectionTimeoutMillis: 10000,
+        },
+        synchronize: true, // Must be true so TypeORM creates tables on fresh Supabase DB
+        ssl: (() => {
+          const host = configService.get<string>('DB_HOST', 'aws-1-eu-central-1.pooler.supabase.com');
+          return (host === 'localhost' || host === '127.0.0.1') ? false : { rejectUnauthorized: false };
+        })(),
       }),
       inject: [ConfigService],
     }),
