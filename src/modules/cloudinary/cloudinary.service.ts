@@ -4,41 +4,38 @@ import { Readable } from 'stream';
 
 @Injectable()
 export class CloudinaryService {
-  async uploadImage(
+  async uploadFile(
     file: Express.Multer.File,
-    folder: string = 'bsng',
+    folder: string = 'bsng_files',
   ): Promise<any> {
     const isCloudinaryConfigured = process.env.CLOUDINARY_API_KEY && 
                                    process.env.CLOUDINARY_API_KEY !== 'your_api_key' &&
                                    process.env.CLOUDINARY_API_KEY !== '';
 
     if (!isCloudinaryConfigured) {
-      // NOTE: Render and Vercel use an EPHEMERAL filesystem. 
-      // Files saved in 'uploads' will be deleted automatically on every restart or redeploy.
-      // This local storage is only intended for local development testing.
-      console.warn('⚠️ CLOUDINARY NOT CONFIGURED: Falling back to ephemeral local storage. Images WILL be lost on server restart.');
+      console.warn('⚠️ CLOUDINARY NOT CONFIGURED: Falling back to ephemeral local storage.');
       
       const path = require('path');
       const fs = require('fs');
       
-      const customDir = path.join(process.cwd(), 'uploads', 'img', 'custom');
+      const customDir = path.join(process.cwd(), 'uploads', folder);
       if (!fs.existsSync(customDir)) {
         fs.mkdirSync(customDir, { recursive: true });
       }
 
-      const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname || '.jpg')}`;
+      const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname || '')}`;
       const savePath = path.join(customDir, filename);
       fs.writeFileSync(savePath, file.buffer);
 
-      const urlPath = `/img/custom/${filename}`;
-      return { secure_url: urlPath, url: urlPath };
+      const urlPath = `/uploads/${folder}/${filename}`;
+      return { secure_url: urlPath, url: urlPath, public_id: filename };
     }
 
     return new Promise((resolve, reject) => {
       const upload = cloudinary.uploader.upload_stream(
         {
           folder: folder,
-          resource_type: 'auto',
+          resource_type: 'auto', // Automatically detects image, video, or raw (pdf, excel, etc.)
         },
         (error, result) => {
           if (error) return reject(error);
@@ -52,6 +49,13 @@ export class CloudinaryService {
       readableStream.push(null);
       readableStream.pipe(upload);
     });
+  }
+
+  async uploadImage(
+    file: Express.Multer.File,
+    folder: string = 'bsng',
+  ): Promise<any> {
+    return this.uploadFile(file, folder);
   }
 
   async deleteImage(publicId: string): Promise<any> {
