@@ -1,4 +1,4 @@
-import { Controller, Get, Body, Put, Param, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Body, Put, Param, Post, UploadedFile, UseInterceptors, InternalServerErrorException, BadRequestException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { SettingsService } from './settings.service';
 import { memoryStorage } from 'multer';
@@ -51,7 +51,14 @@ export class SettingsController {
   ) {
     try {
       if (!image) {
-        return { success: false, message: 'No image file provided in request.' };
+        throw new BadRequestException('No image file selected or provided.');
+      }
+
+      const result = await this.cloudinaryService.uploadImage(image, 'settings');
+      const imageUrl = result.secure_url || result.url;
+
+      if (!imageUrl) {
+        throw new Error('Upload succeeded but no URL was returned from Cloudinary.');
       }
 
       if (key) {
@@ -66,22 +73,12 @@ export class SettingsController {
             });
           }
         }
-      }
-
-      const result = await this.cloudinaryService.uploadImage(image, 'settings');
-      const imageUrl = result.secure_url || result.url;
-
-      if (key) {
         await this.settingsService.updateValue(key, imageUrl);
       }
-      return { success: true, url: imageUrl, key };
+      return { url: imageUrl, key };
     } catch (error) {
-      console.error('Upload Error:', error);
-      return { 
-        success: false, 
-        message: error.message || 'Unknown server error during upload',
-        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
-      };
+      console.error('Core Upload Error:', error);
+      throw new InternalServerErrorException(error.message || 'Upload failed due to a server error. Please check your image size (max 5MB) and Cloudinary configuration.');
     }
   }
   
