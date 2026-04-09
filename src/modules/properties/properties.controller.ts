@@ -89,6 +89,10 @@ export class PropertiesController {
       if (!image) {
         throw new BadRequestException('No image file selected.');
       }
+
+      if (!this.cloudinaryService.isConfigured()) {
+        throw new BadRequestException('CLOUD STORAGE NOT CONFIGURED: Please add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET to your Vercel Environment Variables.');
+      }
       
       const validFields = ['image', 'image2', 'image3'];
       const updateField = validFields.includes(field) ? field : 'image';
@@ -110,8 +114,9 @@ export class PropertiesController {
       await this.propertiesService.update(id, { [updateField]: imageUrl });
       return { url: imageUrl, id, field: updateField };
     } catch (error) {
-      console.error('Property Upload Error:', error);
-      throw new InternalServerErrorException(error.message || 'Failed to upload property image. Please check your Cloudinary configuration.');
+      console.error('Property Image Upload Error:', error);
+      const errorMessage = error.message || (typeof error === 'string' ? error : 'Unknown upload error');
+      throw new InternalServerErrorException(`Server Error: ${errorMessage}`);
     }
   }
 

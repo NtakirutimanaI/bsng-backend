@@ -51,7 +51,11 @@ export class SettingsController {
   ) {
     try {
       if (!image) {
-        throw new BadRequestException('No image file selected or provided.');
+        throw new BadRequestException('No image file selected.');
+      }
+
+      if (!this.cloudinaryService.isConfigured()) {
+        throw new BadRequestException('CLOUD STORAGE NOT CONFIGURED: Please add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET to your Vercel Environment Variables.');
       }
 
       const result = await this.cloudinaryService.uploadImage(image, 'settings');
@@ -77,8 +81,9 @@ export class SettingsController {
       }
       return { url: imageUrl, key };
     } catch (error) {
-      console.error('Core Upload Error:', error);
-      throw new InternalServerErrorException(error.message || 'Upload failed due to a server error. Please check your image size (max 5MB) and Cloudinary configuration.');
+      console.error('Core Settings Upload Error:', error);
+      const errorMessage = error.message || (typeof error === 'string' ? error : 'Unknown upload error');
+      throw new InternalServerErrorException(`Server Error: ${errorMessage}`);
     }
   }
   

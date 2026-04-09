@@ -4,35 +4,35 @@ import { Readable } from 'stream';
 
 @Injectable()
 export class CloudinaryService {
+  isConfigured(): boolean {
+    const config = cloudinary.config();
+    return !!(config.api_key && config.api_key !== 'your_api_key' && config.api_key !== '');
+  }
+
   async uploadFile(
     file: Express.Multer.File,
     folder: string = 'bsng_files',
   ): Promise<any> {
-    const config = cloudinary.config();
-    const isCloudinaryConfigured = config.api_key && 
-                                   config.api_key !== 'your_api_key' &&
-                                   config.api_key !== '';
-
-    if (!isCloudinaryConfigured) {
+    if (!this.isConfigured()) {
+      const message = 'CRITICAL CONFIG ERROR: Your website is not connected to Cloudinary storage. Please add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET to your Vercel environment variables.';
       if (process.env.VERCEL) {
-        throw new Error('CLOUD STORAGE ERROR: Cloudinary credentials (API KEY/SECRET) are missing in the Vercel environment. Please contact support to configure your cloud storage.');
+        throw new Error(message);
       }
-      console.warn('⚠️ CLOUDINARY NOT CONFIGURED: Falling back to ephemeral local storage.');
+      console.warn('⚠️ ' + message + ' Falling back to ephemeral local storage.');
       
       const path = require('path');
       const fs = require('fs');
-      
       const customDir = path.join(process.cwd(), 'uploads', folder);
-      if (!fs.existsSync(customDir)) {
-        fs.mkdirSync(customDir, { recursive: true });
+      try {
+        if (!fs.existsSync(customDir)) fs.mkdirSync(customDir, { recursive: true });
+        const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname || '')}`;
+        const savePath = path.join(customDir, filename);
+        fs.writeFileSync(savePath, file.buffer);
+        const urlPath = `/uploads/${folder}/${filename}`;
+        return { secure_url: urlPath, url: urlPath, public_id: filename };
+      } catch (e) {
+        throw new Error('SERVER STORAGE ERROR: Cloud storage is missing and local storage is disabled on this platform. Please configure Cloudinary environment variables.');
       }
-
-      const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname || '')}`;
-      const savePath = path.join(customDir, filename);
-      fs.writeFileSync(savePath, file.buffer);
-
-      const urlPath = `/uploads/${folder}/${filename}`;
-      return { secure_url: urlPath, url: urlPath, public_id: filename };
     }
 
     return new Promise((resolve, reject) => {

@@ -83,6 +83,10 @@ export class UpdatesController {
         throw new BadRequestException('No image file selected.');
       }
 
+      if (!this.cloudinaryService.isConfigured()) {
+        throw new BadRequestException('CLOUD STORAGE NOT CONFIGURED: Please add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET to your Vercel Environment Variables.');
+      }
+
       const existingUpdate = await this.updatesService.findOne(id);
       
       // Delete old image if it's a Cloudinary one
@@ -101,8 +105,9 @@ export class UpdatesController {
       await this.updatesService.update(id, { image: imageUrl });
       return { url: imageUrl, id };
     } catch (error) {
-      console.error('Update Upload Error:', error);
-      throw new InternalServerErrorException(error.message || 'Failed to upload update image.');
+      console.error('Update Image Upload Error:', error);
+      const errorMessage = error.message || (typeof error === 'string' ? error : 'Unknown upload error');
+      throw new InternalServerErrorException(`Server Error: ${errorMessage}`);
     }
   }
 

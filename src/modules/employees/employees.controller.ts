@@ -186,6 +186,10 @@ export class EmployeesController {
         throw new BadRequestException('No image file selected.');
       }
 
+      if (!this.cloudinaryService.isConfigured()) {
+        throw new BadRequestException('CLOUD STORAGE NOT CONFIGURED: Please add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET to your Vercel Environment Variables.');
+      }
+
       const employee = await this.employeesService.findOne(id);
       
       // Delete old image if it's a Cloudinary one
@@ -204,8 +208,9 @@ export class EmployeesController {
       await this.employeesService.update(id, { photo: imageUrl });
       return { url: imageUrl, id };
     } catch (error) {
-      console.error('Employee Upload Error:', error);
-      throw new InternalServerErrorException(error.message || 'Failed to upload employee photo.');
+      console.error('Employee Photo Upload Error:', error);
+      const errorMessage = error.message || (typeof error === 'string' ? error : 'Unknown error');
+      throw new InternalServerErrorException(`Server Error: ${errorMessage}`);
     }
   }
 
