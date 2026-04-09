@@ -12,6 +12,7 @@ import { SponsorsModule } from '../sponsors/sponsors.module';
 import { AssignmentsModule } from '../assignments/assignments.module';
 import { TasksModule } from '../tasks/tasks.module';
 import { UsersModule } from '../users/users.module';
+import { ActivitiesModule } from '../activities/activities.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { UsersModule } from '../users/users.module';
     AssignmentsModule,
     TasksModule,
     UsersModule,
+    ActivitiesModule,
   ],
   controllers: [DashboardController],
   providers: [DashboardService],

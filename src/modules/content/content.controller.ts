@@ -20,7 +20,6 @@ import { memoryStorage } from 'multer';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { ConfigService } from '@nestjs/config';
 
-@UseGuards(JwtAuthGuard)
 @Controller('content')
 export class ContentController {
   constructor(
@@ -29,6 +28,7 @@ export class ContentController {
     private readonly configService: ConfigService,
   ) {}
 
+  @UseGuards(JwtAuthGuard)
   @Get()
   async findAll(
     @Query('page') page: number = 1,
@@ -44,11 +44,13 @@ export class ContentController {
     return this.contentService.findPublic(section);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return this.contentService.findOne(id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post()
   @UseInterceptors(
     FileInterceptor('image', {
@@ -62,6 +64,7 @@ export class ContentController {
     return this.contentService.create(createContentDto, image);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch(':id')
   @UseInterceptors(
     FileInterceptor('image', {
@@ -76,6 +79,7 @@ export class ContentController {
     return this.contentService.update(id, updateContentDto, image);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch(':id/toggle-status')
   async toggleStatus(
     @Param('id') id: string,
@@ -84,6 +88,7 @@ export class ContentController {
     return this.contentService.toggleStatus(id, isActive);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('upload-image')
   @UseInterceptors(
     FileInterceptor('image', {
@@ -105,6 +110,7 @@ export class ContentController {
     return { url: imageUrl, contentId };
   }
 
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   async remove(@Param('id') id: string) {
     return this.contentService.remove(id);
