@@ -9,6 +9,9 @@ import { PropertiesService } from '../properties/properties.service';
 import { PaymentsService } from '../payments/payments.service';
 import { SponsorsService } from '../sponsors/sponsors.service';
 import { ActivitiesService } from '../activities/activities.service';
+import { AssignmentsService } from '../assignments/assignments.service';
+import { TasksService } from '../tasks/tasks.service';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class DashboardService {
@@ -23,49 +26,39 @@ export class DashboardService {
     private paymentsService: PaymentsService,
     private sponsorsService: SponsorsService,
     private activitiesService: ActivitiesService,
+    private assignmentsService: AssignmentsService,
+    private tasksService: TasksService,
+    private usersService: UsersService,
   ) { }
 
-  async createDashboard(data: Partial<Dashboard>): Promise<Dashboard> {
-    const dashboard = this.dashboardsRepository.create(data);
-    return this.dashboardsRepository.save(dashboard);
-  }
-
-  async createWidget(data: Partial<DashboardWidget>): Promise<DashboardWidget> {
-    const widget = this.widgetsRepository.create(data);
-    return this.widgetsRepository.save(widget);
-  }
-
-  async getDashboardsForRole(roleId: string): Promise<Dashboard[]> {
-    return this.dashboardsRepository.find({
-      where: { roleId },
-      relations: ['widgets'],
-    });
-  }
-
-  async getStats(role: string) {
-    // Fetch all real counts in parallel to significantly improve speed
+  async getStats(role: string, userId: string) {
+    // Fetch all real counts in parallel
     const [
       projects,
       employees,
       properties,
       payments,
       monthlyStats,
-      projectStatusCounts
+      projectStatusCounts,
+      user,
+      allTasks
     ] = await Promise.all([
       this.projectsService.findAll(1, 1),
       this.employeesService.findAll(1, 1),
       this.propertiesService.findAll(1, 1),
       this.paymentsService.findAll(1, 1000),
       this.paymentsService.getMonthlyStats(),
-      this.projectsService.getProjectStatusCounts()
+      this.projectsService.getProjectStatusCounts(),
+      this.usersService.findOne(userId),
+      this.tasksService.findAll(userId, role)
     ]);
 
-    // Calculate Revenue (Total client_payment income)
+    // Calculate Revenue
     const totalRevenue = payments.data
       .filter((p) => p.type === 'client_payment' && ['completed', 'paid'].includes(p.status))
       .reduce((sum, p) => sum + Number(p.amount || 0), 0);
 
-    // Calculate Expenses (Total salary/contractor/supplier)
+    // Calculate Expenses
     const totalExpenses = payments.data
       .filter(
         (p) =>
@@ -101,12 +94,6 @@ export class DashboardService {
           trend: 'up',
         },
       ],
-      publicStats: {
-        projectsCompleted: projects.total,
-        happyClients: 15,
-        teamMembers: employees.total,
-        yearsExperience: 2,
-      },
       revenueStats: {
         income: totalRevenue,
         expenses: totalExpenses,
@@ -114,133 +101,30 @@ export class DashboardService {
       },
       latestProjects: projects.data,
       projectStatusCounts,
+      tasks: allTasks,
     };
 
-    // Add role-specific data
+    // Role-specific dynamic stats
     if (role === 'employee') {
+      const employee = await this.employeesService.findByEmail(user.email);
+      const myAssignmentsCount = employee ? await this.assignmentsService.countAssignments({ employeeId: employee.id }) : 0;
+      
       stats.employeeStats = [
-        { name: 'My Assignments', value: '4', change: 'Active', trend: 'up' },
-        {
-          name: 'Hours Worked',
-          value: '38h',
-          change: 'This week',
-          trend: 'up',
-        },
-        {
-          name: 'Pending Tasks',
-          value: '7',
-          change: 'Due soon',
-          trend: 'down',
-        },
-        {
-          name: 'Next Payday',
-          value: 'Feb 28',
-          change: 'Confirmed',
-          trend: 'up',
-        },
+        { name: 'My Assignments', value: myAssignmentsCount.toString(), change: 'Active', trend: 'up' },
+        { name: 'Hours Worked', value: `${employee?.attendance || 0}h`, change: 'Total', trend: 'up' },
+        { name: 'Pending Tasks', value: allTasks.filter(t => !t.isDone).length.toString(), change: 'Tasks', trend: 'down' },
+        { name: 'Base Salary', value: `RWF ${(employee?.baseSalary || 0).toLocaleString()}`, change: employee?.salaryType || 'Monthly', trend: 'up' },
       ];
     } else if (role === 'client') {
+      const myPropertiesCount = await this.propertiesService.findAll(1, 100, '', user.id); // Assuming properties can be filtered by user
+      const myPayments = payments.data.filter(p => p.payer === user.fullName);
+      const totalPaid = myPayments.reduce((sum, p) => sum + Number(p.amount), 0);
+
       stats.clientStats = [
-        { name: 'My Properties', value: '1', change: 'Occupied', trend: 'up' },
-        {
-          name: 'Payment Status',
-          value: 'Paid',
-          change: 'Feb 2026',
-          trend: 'up',
-        },
-        {
-          name: 'Next Rent Due',
-          value: 'Mar 01',
-          change: 'In 21 days',
-          trend: 'up',
-        },
-        {
-          name: 'Support Tickets',
-          value: '0',
-          change: 'All clear',
-          trend: 'up',
-        },
-      ];
-    } else if (role === 'contractor') {
-      stats.contractorStats = [
-        {
-          name: 'Active Contracts',
-          value: '2',
-          change: 'Ongoing',
-          trend: 'up',
-        },
-        {
-          name: 'Completed Work',
-          value: '85%',
-          change: '+5% week',
-          trend: 'up',
-        },
-        {
-          name: 'Pending Invoices',
-          value: '1',
-          change: 'RWF 1.2M',
-          trend: 'up',
-        },
-        {
-          name: 'Upcoming Deadlines',
-          value: '3',
-          change: 'Priority',
-          trend: 'down',
-        },
-      ];
-    } else if (role === 'site_manager') {
-      stats.siteManagerStats = [
-        {
-          name: 'On-site Personnel',
-          value: '24',
-          change: '+4 today',
-          trend: 'up',
-        },
-        {
-          name: 'Project Progress',
-          value: '68%',
-          change: '+2% week',
-          trend: 'up',
-        },
-        {
-          name: 'Material Requests',
-          value: '3',
-          change: 'Pending',
-          trend: 'warning',
-        },
-        {
-          name: 'Daily Reports',
-          value: '12/12',
-          change: 'Complete',
-          trend: 'up',
-        },
-      ];
-    } else if (role === 'manager') {
-      stats.managerStats = [
-        {
-          name: 'Total Budget',
-          value: 'RWF 850M',
-          change: 'Planned',
-          trend: 'up',
-        },
-        {
-          name: 'Budget Utilized',
-          value: '42%',
-          change: 'On track',
-          trend: 'up',
-        },
-        {
-          name: 'Staff Retention',
-          value: '98%',
-          change: 'Monthly',
-          trend: 'up',
-        },
-        {
-          name: 'Strategic Goals',
-          value: '4/5',
-          change: 'In progress',
-          trend: 'up',
-        },
+        { name: 'My Properties', value: myPropertiesCount.total.toString(), change: 'Occupied', trend: 'up' },
+        { name: 'Total Paid', value: `RWF ${(totalPaid / 1000000).toFixed(2)}M`, change: 'Invested', trend: 'up' },
+        { name: 'Payment Status', value: myPayments.length > 0 ? 'Up-to-date' : 'None', change: 'Status', trend: 'up' },
+        { name: 'Support Tickets', value: '0', change: 'All clear', trend: 'up' },
       ];
     }
 

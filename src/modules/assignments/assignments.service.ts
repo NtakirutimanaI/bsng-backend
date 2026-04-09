@@ -37,4 +37,8 @@ export class AssignmentsService {
     const assignment = await this.findOne(id);
     return await this.assignmentsRepository.remove(assignment);
   }
+
+  async countAssignments(filters: { employeeId?: string; siteId?: string } = {}) {
+    return await this.assignmentsRepository.count({ where: filters });
+  }
 }

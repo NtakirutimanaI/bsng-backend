@@ -29,6 +29,7 @@ import { FinanceModule } from './modules/finance/finance.module';
 import { ActivitiesModule } from './modules/activities/activities.module';
 import { EventsModule } from './modules/events/events.module';
 import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
+import { TasksModule } from './modules/tasks/tasks.module';
 
 @Module({
   imports: [
@@ -78,6 +79,7 @@ import { CloudinaryModule } from './modules/cloudinary/cloudinary.module';
     ActivitiesModule,
     EventsModule,
     CloudinaryModule,
+    TasksModule,
   ],
   controllers: [AppController],
   providers: [AppService],
