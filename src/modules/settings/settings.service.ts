@@ -121,7 +121,7 @@ export class SettingsService {
       },
       {
         key: 'home_hero_bg',
-        value: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop',
+        value: '/img/new/about1.png',
         group: 'home',
         description: 'Hero background image',
         isPublic: true,
@@ -257,7 +257,7 @@ export class SettingsService {
       },
       {
         key: 'home_carousel_1',
-        value: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop',
+        value: '/img/new/about1.png',
         group: 'home',
         description: 'First hero carousel image',
         isPublic: true,
