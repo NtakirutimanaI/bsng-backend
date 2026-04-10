@@ -54,10 +54,6 @@ export class SettingsController {
         throw new BadRequestException('No image file selected.');
       }
 
-      if (!this.cloudinaryService.isConfigured()) {
-        throw new BadRequestException('CLOUD STORAGE NOT CONFIGURED: Please add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET to your Vercel Environment Variables.');
-      }
-
       const result = await this.cloudinaryService.uploadImage(image, 'settings');
       const imageUrl = result.secure_url || result.url;
 
@@ -90,25 +86,44 @@ export class SettingsController {
   @Post('sync-github')
   async syncGithub() {
     try {
-      const frontendDir = path.join(process.cwd(), '../bsng-frontend');
-      const backendDir = process.cwd();
+      // Vercel check: skip git sync as it's not supported and causes timeouts
+      if (process.env.VERCEL) {
+        return { success: true, message: 'Settings saved to database. Git sync skipped on Vercel environment.' };
+      }
 
+      const backendDir = process.cwd();
+      const frontendDir = path.resolve(backendDir, '..', 'bsng-frontend');
+      
+      const results = [];
       for (const repoDir of [frontendDir, backendDir]) {
-        if (!fs.existsSync(repoDir)) continue;
-        await execAsync('git config --global user.email "admin@bsng.org" || true', { cwd: repoDir });
-        await execAsync('git config --global user.name "BSNG Admin" || true', { cwd: repoDir });
-        await execAsync('git add .', { cwd: repoDir });
+        if (!fs.existsSync(repoDir) || !fs.existsSync(path.join(repoDir, '.git'))) {
+           results.push({ dir: path.basename(repoDir), status: 'skipped (no git)' });
+           continue;
+        }
+
         try {
+          await execAsync('git config user.email "admin@bsng.org" || true', { cwd: repoDir });
+          await execAsync('git config user.name "BSNG Admin" || true', { cwd: repoDir });
+          await execAsync('git add .', { cwd: repoDir });
+          
+          // Check if there are changes to commit
+          const { stdout: status } = await execAsync('git status --porcelain', { cwd: repoDir });
+          if (!status.trim()) {
+            results.push({ dir: path.basename(repoDir), status: 'no changes' });
+            continue;
+          }
+
           await execAsync('git commit -m "Auto-update website content via CMS"', { cwd: repoDir });
           await execAsync('git push origin main', { cwd: repoDir });
+          results.push({ dir: path.basename(repoDir), status: 'success' });
         } catch (commitErr) {
-           // Nothing to commit
+          results.push({ dir: path.basename(repoDir), status: 'error', details: commitErr.message });
         }
       }
-      return { success: true, message: 'Synced both frontend and backend to Github' };
+      return { success: true, message: 'Sync process completed', results };
     } catch (error) {
       console.error('Github Sync Error:', error);
-      return { success: false, error: 'Failed to sync with Github' };
+      return { success: false, error: error.message || 'Failed to sync with Github' };
     }
   }
 

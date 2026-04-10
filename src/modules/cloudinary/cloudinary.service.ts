@@ -14,11 +14,8 @@ export class CloudinaryService {
     folder: string = 'bsng_files',
   ): Promise<any> {
     if (!this.isConfigured()) {
-      const message = 'CRITICAL CONFIG ERROR: Your website is not connected to Cloudinary storage. Please add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET to your Vercel environment variables.';
-      if (process.env.VERCEL) {
-        throw new Error(message);
-      }
-      console.warn('⚠️ ' + message + ' Falling back to ephemeral local storage.');
+      const message = 'CRITICAL CONFIG ERROR: Your website is not connected to Cloudinary storage. Please add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET to your environment variables.';
+      console.warn('⚠️ ' + message + ' Falling back to ephemeral local storage (uploads folder).');
       
       const path = require('path');
       const fs = require('fs');

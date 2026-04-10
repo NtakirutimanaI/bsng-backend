@@ -83,10 +83,6 @@ export class UpdatesController {
         throw new BadRequestException('No image file selected.');
       }
 
-      if (!this.cloudinaryService.isConfigured()) {
-        throw new BadRequestException('CLOUD STORAGE NOT CONFIGURED: Please add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET to your Vercel Environment Variables.');
-      }
-
       const existingUpdate = await this.updatesService.findOne(id);
       
       // Delete old image if it's a Cloudinary one

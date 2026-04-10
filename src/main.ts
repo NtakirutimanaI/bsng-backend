@@ -10,6 +10,11 @@ async function bootstrap() {
   if (!cachedApp) {
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
     app.enableCors();
+    
+    // Support large image uploads
+    const express = require('express');
+    app.use(express.json({ limit: '50mb' }));
+    app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
     app.useStaticAssets(join(process.cwd(), 'uploads'), {
       prefix: '/uploads',
