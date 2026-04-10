@@ -121,7 +121,7 @@ export class SettingsService {
       },
       {
         key: 'home_hero_bg',
-        value: '/img/new/about1.png',
+        value: '/img/new/hero_wave.png',
         group: 'home',
         description: 'Hero background image',
         isPublic: true,
